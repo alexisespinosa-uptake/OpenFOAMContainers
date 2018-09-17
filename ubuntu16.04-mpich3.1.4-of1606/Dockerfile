@@ -172,7 +172,7 @@ RUN icoFoam -help 2>&1 | tee log.icoFoam
 # Delete the temporary files and directories
 USER root
 WORKDIR /
-rm -rf /tmp/*
+RUN rm -rf /tmp/*
 
 USER ofuser
 WORKDIR /home/ofuser/OpenFOAM

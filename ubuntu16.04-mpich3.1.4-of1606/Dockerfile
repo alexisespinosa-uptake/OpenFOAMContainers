@@ -157,8 +157,10 @@ RUN source ./OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh \
  && . $WM_PROJECT_DIR/etc/bashrc $FOAM_SETTINGS
 
 ##Checking if openfoam is working
-WORKDIR /home/ofuser/OpenFOAM
-RUN icoFoam -help 2>&1 | tee log.icoFoam
+RUN source ./OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh \
+ && source ./OpenFOAM-${OFVERSION}/etc/bashrc \
+ && cd $WM_PROJECT_DIR \
+ && icoFoam -help 2>&1 | tee log.icoFoam
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------

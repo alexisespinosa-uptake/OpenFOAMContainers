@@ -174,7 +174,7 @@ RUN source ./OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh \
 # Delete the temporary files and directories
 USER root
 WORKDIR /
-RUN rm -rf /tmp/*
+RUN rm -rf /tmp
 
 USER ofuser
 WORKDIR /home/ofuser/OpenFOAM

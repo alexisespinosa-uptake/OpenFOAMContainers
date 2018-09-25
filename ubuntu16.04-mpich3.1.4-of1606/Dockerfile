@@ -164,9 +164,23 @@ RUN source ./OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh \
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
+#Installing gosu
+USER root
+RUN apt-get update -qq\
+ &&  apt-get -y --no-install-recommends install \
+            cron gosu \
+ && apt-get clean all \
+ && rm -r /var/lib/apt/lists/*
+
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
 
 
 
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -176,5 +190,13 @@ USER root
 WORKDIR /
 RUN rm -rf /tmp
 
-USER ofuser
-WORKDIR /home/ofuser/OpenFOAM
+# Start as ofuser
+#USER ofuser
+#WORKDIR /home/ofuser/OpenFOAM
+RUN echo "source ${PWD}/OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh" >> ${HOME}/.bashrc \
+ && echo "source ${PWD}/OpenFOAM-${OFVERSION}/etc/bashrc" >> ${HOME}/.bashrc
+
+
+#Settings for using openfoam with host mpi
+WORKDIR /hostSetup
+ENTRYPOINT ["/hostSetup/OFContainerSetUp.sh"]

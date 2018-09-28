@@ -161,6 +161,7 @@ RUN source ./OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh \
  && source ./OpenFOAM-${OFVERSION}/etc/bashrc \
  && cd $WM_PROJECT_DIR \
  && icoFoam -help 2>&1 | tee log.icoFoam
+
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -175,28 +176,17 @@ RUN apt-get update -qq\
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-
-
-
-#---------------------------------------------------------------
-#---------------------------------------------------------------
-#---------------------------------------------------------------
-#---------------------------------------------------------------
-#---------------------------------------------------------------
-#---------------------------------------------------------------
-##Final step
 # Delete the temporary files and directories
 USER root
 WORKDIR /
 RUN rm -rf /tmp
 
-# Start as ofuser
-#USER ofuser
-#WORKDIR /home/ofuser/OpenFOAM
-RUN echo "source ${PWD}/OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh" >> ${HOME}/.bashrc \
- && echo "source ${PWD}/OpenFOAM-${OFVERSION}/etc/bashrc" >> ${HOME}/.bashrc
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+# Automating the sourcing of the openfoam bashrc file for ofuser
+USER ofuser
+WORKDIR /home/ofuser
+RUN echo "source ${PWD}/OpenFOAM/OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh" >> ${HOME}/.bashrc \
+ && echo "source ${PWD}/OpenFOAM/OpenFOAM-${OFVERSION}/etc/bashrc" >> ${HOME}/.bashrc
 
-
-#Settings for using openfoam with host mpi
-WORKDIR /hostSetup
-ENTRYPOINT ["/hostSetup/OFContainerSetUp.sh"]

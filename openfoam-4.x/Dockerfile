@@ -159,7 +159,7 @@ RUN echo 'export WM_MPLIB=SYSTEMMPI' >> ${OFPREFS} \
 
 #...........
 #Changing the installation directory within the bashrc file (This is not in the openfoamwiki instructions)
-RUN sed -i $'s@^foamInstall=$HOME/$WM_PROJECT@# foamInstall=$HOME/$WM_PROJECT\\\nfoamInstall='"${OFINSTDIR}"'@' ${OFBASHRC} \
+RUN sed -i $'s@^export FOAM_INST_DIR=$HOME/$WM_PROJECT@# export FOAM_INST_DIR=$HOME/$WM_PROJECT\\\nFOAM_INST_DIR='"${OFINSTDIR}"'@' ${OFBASHRC} \
 #Changing the WM_PROJECT_USER_DIR directory within the bashrc file 
 #IMPORTANT:You have two options:
 #   1. You can mount a directory of your local-host into this directory (as explained at the end of the Dockerfile)
@@ -167,16 +167,9 @@ RUN sed -i $'s@^foamInstall=$HOME/$WM_PROJECT@# foamInstall=$HOME/$WM_PROJECT\\\
  && sed -i $'s@^export WM_PROJECT_USER_DIR=$HOME/$WM_PROJECT/$USER-$WM_PROJECT_VERSION@#export WM_PROJECT_USER_DIR=$HOME/$WM_PROJECT/$USER-$WM_PROJECT_VERSION\\\nexport WM_PROJECT_USER_DIR='"${OFUSERDIR}/ofuser"'-$WM_PROJECT_VERSION@' ${OFBASHRC}
 
 #...........
-##Third party compilation (not indicated in the openfoamwiki instructions by mistake, 
-#  but following the ThirdParty instructions from above the page for other ubuntu version)
-RUN . ${OFPREFS} \
- && . ${OFBASHRC} \
- && cd $WM_THIRD_PARTY_DIR \
- && export QT_SELECT=qt4 \
- && ./Allwmake -j 4 2>&1 | tee log.make
-#AEG:DidNotWork: && wmSET $FOAM_SETTINGS
-#(adding next line instead)
-#AEG:NotReallyNeeded: && . $WM_PROJECT_DIR/etc/bashrc $FOAM_SETTINGS
+#Settings for X86_64 with 64 bit integer support
+RUN sed -i $'s@^export WM_LABEL_SIZE=32@# export WM_LABEL_SIZE=32\\\nexport WM_LABEL_SIZE=64@' ${OFBASHRC} \
+ && echo 'export FOAMY_HEX_MESH="yes"' >> ${OFPREFS}
 
 #...........
 ##Paraview compilation (for runtime postprocessing purposes)
@@ -185,6 +178,17 @@ RUN . ${OFPREFS} \
  && cd $WM_THIRD_PARTY_DIR \
  && export QT_SELECT=qt4 \
  && ./makeParaView4 -python -mpi -python-lib /usr/lib/x86_64-linux-gnu/libpython2.7.so.1.0 2>&1 | tee log.makePV
+#AEG:DidNotWork: && wmSET $FOAM_SETTINGS
+#(adding next line instead)
+#AEG:NotReallyNeeded: && . $WM_PROJECT_DIR/etc/bashrc $FOAM_SETTINGS
+
+#...........
+##Third party compilation (not indicated in the openfoamwiki but preferred to do it separately) 
+RUN . ${OFPREFS} \
+ && . ${OFBASHRC} \
+ && cd $WM_THIRD_PARTY_DIR \
+ && export QT_SELECT=qt4 \
+ && ./Allwmake -j 4 2>&1 | tee log.make
 #AEG:DidNotWork: && wmSET $FOAM_SETTINGS
 #(adding next line instead)
 #AEG:NotReallyNeeded: && . $WM_PROJECT_DIR/etc/bashrc $FOAM_SETTINGS

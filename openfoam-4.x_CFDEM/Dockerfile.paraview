@@ -1,0 +1,138 @@
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#Initial main definintion
+
+FROM alexisespinosa/openfoam:4.x
+#FROM ubuntu:16.04
+#FROM alexisespinosa/openfoam:4.x_raw
+USER root
+#...........
+#Using bash
+#SHELL ["/bin/bash","-c"]
+
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#This section is for installing CFDEM and LIGGGHTS
+
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#Trick for making apt-get work again. This is very weird.
+#Following the solution proposed here:
+#https://sillycodes.com/quick-tip-couldnt-create-temporary-file/
+#But modified a little bit in order to  let apt-get install -y to work fine
+RUN apt-get clean \
+ && mv /var/lib/apt/lists/partial /tmp \
+ && mkdir -p /var/lib/apt/lists/partial \
+ && apt-get clean \
+ && apt-get update
+
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#Installing VTK
+
+#...........
+#Compiling VTK from OF directory
+ARG VTKBASEDIR=/MySoftware/VTK
+ARG VTKBUILDDIR=$VTKBASEDIR/VTK-build
+ARG VTKSOURCEDIR=${WM_THIRD_PARTY_DIR}/ParaView-${ParaView_VERSION}/VTK
+##ARG VTKSOURCEDIR=${VTKBASEDIR}/VTK
+ARG VTKINSTDIR=$VTKBASEDIR/VTK-install
+ARG VTKMAKEOPTIONS="-j4"
+WORKDIR $VTKBUILDDIR
+RUN cmake ${VTKSOURCEDIR} -DBUILD_SHARED_LIBS=on -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${VTKINSTDIR} \
+ && make ${VTKMAKEOPTIONS} \
+ && make install
+
+
+
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#Installation of CFDEM & LIGGGHTS
+#...........
+#Installing prerequisites for CFDEM®project
+RUN apt-get update -qq\
+ &&  apt-get -y --no-install-recommends install \
+#   build-essential flex bison cmake zlib1g-dev libboost-system-dev \
+#   libboost-thread-dev \
+#AEG:No openmpi:   libopenmpi-dev openmpi-bin \
+#   gnuplot \
+#   libreadline-dev libncurses-dev libxt-dev \
+#   libscotch-dev libptscotch-dev \ 
+#   libvtk6.2 libvtk6-dev \
+   python-numpy \
+ && apt-get clean all \
+ && rm -r /var/lib/apt/lists/*
+
+
+#...........
+#Downloading the tools
+ARG CFDEMINSTDIR=/MySoftware/CFDEM
+ARG CFDEMUSERDIR=/home/ofuser/CFDEM
+WORKDIR $CFDEMINSTDIR
+RUN git clone git://github.com/CFDEMproject/CFDEMcoupling-PUBLIC.git \ 
+ && mv CFDEMcoupling-PUBLIC CFDEMcoupling-PUBLIC-$WM_PROJECT_VERSION 
+
+WORKDIR /MySoftware/LIGGGHTS
+ARG LIGGGHTSINSTDIR=/MySoftware/LIGGGHTS
+WORKDIR $LIGGGHTSINSTDIR
+RUN git clone git://github.com/CFDEMproject/LIGGGHTS-PUBLIC.git \ 
+ && git clone git://github.com/CFDEMproject/LPP.git lpp
+
+
+#...........
+#Standard Settings of environment variables
+ENV CFDEM_VERSION=PUBLIC
+ENV CFDEM_PROJECT_DIR=$CFDEMINSTDIR/CFDEMcoupling-$CFDEM_VERSION-$WM_PROJECT_VERSION
+ENV CFDEM_PROJECT_USER_DIR=$CFDEMUSERDIR/ofuser-$CFDEM_VERSION-$WM_PROJECT_VERSION
+ENV CFDEM_bashrc=$CFDEM_PROJECT_DIR/src/lagrangian/cfdemParticle/etc/bashrc
+ENV CFDEM_LIGGGHTS_SRC_DIR=$LIGGGHTSINSTDIR/LIGGGHTS-PUBLIC/src
+ENV CFDEM_LIGGGHTS_MAKEFILE_NAME=auto
+ENV CFDEM_LPP_DIR=$LIGGGHTSINSTDIR/lpp/src
+#...........
+#Extended Settings of environment variables
+ENV CFDEM_SRC_DIR=$CFDEM_PROJECT_DIR/src
+ENV CFDEM_SOLVER_DIR=$CFDEM_PROJECT_DIR/applications/solvers
+ENV CFDEM_DOC_DIR=$CFDEM_PROJECT_DIR/doc
+ENV CFDEM_UT_DIR=$CFDEM_PROJECT_DIR/applications/utilities
+ENV CFDEM_TUT_DIR=$CFDEM_PROJECT_DIR/tutorials
+ENV CFDEM_LIGGGHTS_MAKEFILE_POSTIFX=
+ENV CFDEM_VERBOSE=false
+
+#...........
+#Create the cfdem user directory
+USER ofuser
+RUN mkdir -p ${CFDEM_PROJECT_USER_DIR} \
+ && chmod -R 777 ${CFDEMUSERDIR}
+USER root
+
+#...........
+#Test that settings are correct
+#(For some reason, this does not work)
+####RUN . ${CFDEM_bashrc} \
+#### && cd $CFDEMINSTDIR \
+#### && cfdemSysTest 2>&1 | tee log.cfdemSysTest
+
+
+#...........
+#Modifying the LIGGGHTS makefile
+WORKDIR $LIGGGHTSINSTDIR/LIGGGHTS-PUBLIC/src
+RUN make auto; exit 0
+RUN sed -i $'s@^#VTK_INC_USR=-I/path/to/vtk/include@#VTK_INC_USR=-I/path/to/vtk/include\\\nVTK_INC_USR=-I'"${VTKINSTDIR}"'/include/vtk-7.1@' ./MAKE/Makefile.user \
+ && sed -i $'s@^#VTK_LIB_USR=-L/path/to/vtk/lib@#VTK_LIB_USR=-L/path/to/vtk/lib\\\nVTK_LIB_USR=-I'"${VTKINSTDIR}"'/lib@' ./MAKE/Makefile.user \
+ && make clean-auto
+
+#...........
+#Installing LIGGGTHS
+RUN make auto
+
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+## Starting as ofuser by default
+USER ofuser
+WORKDIR /home/ofuser

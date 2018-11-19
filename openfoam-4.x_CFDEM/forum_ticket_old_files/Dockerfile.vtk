@@ -35,15 +35,22 @@ RUN apt-get clean \
 #Installing VTK
 
 #...........
-#Compiling VTK from OF directory
+#Downloading VTK
 ARG VTKBASEDIR=/MySoftware/VTK
+WORKDIR $VTKBASEDIR
+RUN git clone git://vtk.org/VTK.git \
+ && cd VTK \
+ && git fetch origin \
+ && git rebase origin/master
+
+#...........
+#Compiling VTK from the downloaded VTK
 ARG VTKBUILDDIR=$VTKBASEDIR/VTK-build
-ARG VTKSOURCEDIR=${WM_THIRD_PARTY_DIR}/ParaView-${ParaView_VERSION}/VTK
-##ARG VTKSOURCEDIR=${VTKBASEDIR}/VTK
+ARG VTKSOURCEDIR=${VTKBASEDIR}/VTK
 ARG VTKINSTDIR=$VTKBASEDIR/VTK-install
 ARG VTKMAKEOPTIONS="-j4"
 WORKDIR $VTKBUILDDIR
-RUN cmake ${VTKSOURCEDIR} -DBUILD_SHARED_LIBS=on -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${VTKINSTDIR} \
+RUN cmake ${VTKSOURCEDIR} --DVTK_Group_MPI=on DBUILD_SHARED_LIBS=on -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${VTKINSTDIR} \
  && make ${VTKMAKEOPTIONS} \
  && make install
 
@@ -122,8 +129,8 @@ USER root
 #Modifying the LIGGGHTS makefile
 WORKDIR $LIGGGHTSINSTDIR/LIGGGHTS-PUBLIC/src
 RUN make auto; exit 0
-RUN sed -i $'s@^#VTK_INC_USR=-I/path/to/vtk/include@#VTK_INC_USR=-I/path/to/vtk/include\\\nVTK_INC_USR=-I'"${VTKINSTDIR}"'/include/vtk-7.1@' ./MAKE/Makefile.user \
- && sed -i $'s@^#VTK_LIB_USR=-L/path/to/vtk/lib@#VTK_LIB_USR=-L/path/to/vtk/lib\\\nVTK_LIB_USR=-I'"${VTKINSTDIR}"'/lib@' ./MAKE/Makefile.user \
+RUN sed -i $'s@^#VTK_INC_USR=-I/path/to/vtk/include@#VTK_INC_USR=-I/path/to/vtk/include\\\nVTK_INC_USR=-I'"${VTKINSTDIR}"'/include/vtk-8.2@' ./MAKE/Makefile.user \
+ && sed -i $'s@^#VTK_LIB_USR=-L/path/to/vtk/lib@#VTK_LIB_USR=-L/path/to/vtk/lib\\\nVTK_LIB_USR=-L'"${VTKINSTDIR}"'/lib@' ./MAKE/Makefile.user \
  && make clean-auto
 
 #...........

@@ -5,5 +5,9 @@ installation within an interactive session and write the Dockerfile as a list of
 The exact order and syntax of this series of commands is the result of the gained experience during the interactive
 sessions. This is usually a cycle of tests until the right Dockerfile is achieved.
 
-### 
+### Example - Installing VTK, CFDEM and LIGGGTHS to openfoam:4.x
+
+Dockerfile within openfoam-4.x_CFDEM is self explanatory about the process.
+An example for running a tutorial case is within the same folder under tutorials_pawsey ...
+
 

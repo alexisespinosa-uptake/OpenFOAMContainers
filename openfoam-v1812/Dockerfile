@@ -180,9 +180,10 @@ RUN cp ${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh $OFPREF
  && echo 'export WM_MPLIB=SYSTEMMPI' >> ${OFPREFS} \
  && echo 'export MPI_ROOT="/usr"' >> ${OFPREFS} \
  && echo 'export MPI_ARCH_FLAGS="-DMPICH_SKIP_MPICXX"' >> ${OFPREFS} \
-## && echo 'export MPI_ARCH_INC="-isystem $MPI_ROOT/include"' >> ${OFPREFS} \
+##ProblemsWithGcc7.Using next line instead: && echo 'export MPI_ARCH_INC="-isystem $MPI_ROOT/include"' >> ${OFPREFS} \
  && echo 'export MPI_ARCH_INC="-I $MPI_ROOT/include"' >> ${OFPREFS} \
- && echo 'export MPI_ARCH_LIBS="-L$MPI_ROOT/lib -lmpich"' >> ${OFPREFS}
+##MakingItSimilarTo:mplibMPICH inNextLine: && echo 'export MPI_ARCH_LIBS="-L$MPI_ROOT/lib -lmpich"' >> ${OFPREFS}
+ && echo 'export MPI_ARCH_LIBS="-L$(MPI_ARCH_PATH)/lib$(WM_COMPILER_LIB_ARCH) -L$(MPI_ARCH_PATH)/lib -lmpich -lrt"' >> ${OFPREFS}
 
 #...........
 #Step Additional
@@ -244,6 +245,11 @@ RUN . ${OFBASHRC} \
  && cd $WM_PROJECT_DIR \
  && icoFoam -help 2>&1 | tee log.icoFoam
 
+#...........
+#Writing the environment variables for the installation so far:
+RUN . ${OFBASHRC} \
+ && cd $WM_PROJECT_DIR \
+ && printenv > environment_vars_raw.env
 
 #...........
 #Create the openfoam user directory
@@ -299,16 +305,16 @@ RUN chmod -R 777 $OFINSTDIR
 #      as explained in the final steps. This will setup the container to be able to run openfoam without the need of sourcing the
 #      configuration files, allowing shifter to work.)
 #      0.1 Build the image, I used:
-#          docker build -t alexisespinosa/openfoam:2.4.0 .
+#          docker build -t alexisespinosa/openfoam:v1812 .
 #      0.2 Run an interactive session (mount your current dir "$PWD" as /localDir,
 #          and use your local user:group as user in order to have correct file permissions
 #          to be visible from inside and outside the container):
-#          docker run -it --rm -v $PWD:/localDir --user $(id -u):$(id -g) alexisespinosa/openfoam:2.4.0
+#          docker run -it --rm -v $PWD:/localDir --user $(id -u):$(id -g) alexisespinosa/openfoam:v1812
 #      (0.3) (Your prompt will say "I have no name", but that is fine as we forced to use your local user
 #            in order to avoid messing with file permissions in the mounted directory)
 #  1.  Within the interactive session, source the configuration file:
 #      1.1 source the file bashrc (the full path is written above to define $OFBASHRC):
-#            source /MySoftware/OpenFOAM/OpenFOAM-2.4.0/etc/bashrc
+#            source /MySoftware/OpenFOAM/OpenFOAM-v1812/etc/bashrc
 #  2.  Test that openfoam is working properly for the current user:
 #      2.1 mkdir -p /localDir/run/tutorials
 #      2.2 cp -rp $FOAM_TUTORIALS/incompressible/icoFoam/cavity/cavity /localDir/run/tutorials/
@@ -337,9 +343,9 @@ RUN chmod -R 777 $OFINSTDIR
 #      instructions where indicated.
 #      5.1 Find the "Copy&Paste" section below and paste the list there.
 #  6.  Generate the openfoam image again as in 0.1 above.
-#      6.1 docker build -t alexisespinosa/openfoam:2.4.0 .
+#      6.1 docker build -t alexisespinosa/openfoam:v1812 .
 #  7.  Test that openfoam works without the need of sourcing the configuration files:
-#      7.1 docker run -it --rm -v $PWD:/localDir --user $(id -u):$(id -g) alexisespinosa/openfoam:2.4.0
+#      7.1 docker run -it --rm -v $PWD:/localDir --user $(id -u):$(id -g) alexisespinosa/openfoam:v1812
 #      7.2 DO NOT SOURCE ANY CONFIGURATION FILE
 #      7.3 cd /localDir/run/tutorials/cavity
 #      7.4 blockMesh
@@ -351,8 +357,8 @@ RUN chmod -R 777 $OFINSTDIR
 #      8.2 remove the existing results:
 #          rm -rf 0.*
 #          (do not remove the 0 directory which has the initial conditions)
-#      8.3 docker run --rm -v $PWD:/cavity -w /cavity --user $(id -u):$(id -g) alexisespinosa/openfoam:2.4.0 blockMesh
-#      8.4 docker run --rm -v $PWD:/cavity -w /cavity --user $(id -u):$(id -g) alexisespinosa/openfoam:2.4.0 icoFoam
+#      8.3 docker run --rm -v $PWD:/cavity -w /cavity --user $(id -u):$(id -g) alexisespinosa/openfoam:v1812 blockMesh
+#      8.4 docker run --rm -v $PWD:/cavity -w /cavity --user $(id -u):$(id -g) alexisespinosa/openfoam:v1812 icoFoam
 #      8.5 If everything ran fine, then this container is ready for Pawsey
 #
 #----------------------------:
@@ -407,6 +413,11 @@ ENV WM_PROJECT=OpenFOAM
 ENV WM_PROJECT_USER_DIR=/home/ofuser/OpenFOAM/ofuser-v1812
 ENV WM_PROJECT_VERSION=v1812
 ENV WM_THIRD_PARTY_DIR=/MySoftware/OpenFOAM/ThirdParty-v1812
+
+#...........
+#Writing the environment variables for the installation so far:
+RUN cd $WM_PROJECT_DIR \
+ && printenv > environment_vars_defined.env
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #Trick for making apt-get work again. This is very weird.
@@ -433,18 +444,18 @@ WORKDIR /home/ofuser
 #For setting up your container in pawsey:
 #0. Push the container to your repository
 #   (This example considers my repository is "alexisespinosa", the image name is "openfoam"
-#    and the tag is "2.4.0")
+#    and the tag is "v1812")
 #   0.1: From your desktop where you built your docker image run:
-#        docker push alexisespinosa/openfoam:2.4.0
+#        docker push alexisespinosa/openfoam:v1812
 #1. ssh to zeus or magnus: ssh espinosa@zeus.pawsey.org.au
 #2. Run the following commands in zeus or magnus:
 #   2.1 module load shifter/18.06.00
-#   2.2 sg $PAWSEY_PROJECT -c 'shifter pull alexisespinosa/openfoam:2.4.0'
+#   2.2 sg $PAWSEY_PROJECT -c 'shifter pull alexisespinosa/openfoam:v1812'
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-#Example script for running openfoam:2.4.0 container:
+#Example script for running openfoam:v1812 container:
 #1. cd to the working directory (In this case, this working dir has the tutorial "damBreak")
 #2. run the script: sbatch runContainer.sh
 #   2.1 The script contains: (What is in the script is after the mark ##|):
@@ -457,7 +468,7 @@ WORKDIR /home/ofuser
 ##|module load shifter/18.06.00
 ##|#----------
 ##|#Setting some preliminary environmental variables
-##|OF_VERSION=2.4.0
+##|OF_VERSION=v1812
 ##|
 ##|echo "1: Creating the mesh:"
 ##|srun --export=all -n 1 shifter run alexisespinosa/openfoam:$OF_VERSION blockMesh
@@ -471,24 +482,24 @@ WORKDIR /home/ofuser
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-#Example for compiling your own solver to be used with the openfoam:2.4.0 container:
+#Example for compiling your own solver to be used with the openfoam:v1812 container:
 
 # For using it in your local host with docker:
 # 1.0 Pull the container:
-#     1.1 docker pull alexisespinosa/openfoam:2.4.0
+#     1.1 docker pull alexisespinosa/openfoam:v1812
 # 2.0 Run the container interactively:
 #     2.3 cd to your working directory in scratch:
 #         2.3.1  cd <workingDir> 
 #     2.5 (At pawsey computer): run interactively mounting your userOpenFOAM directory in the place of $WM_PROJECT_USER_DIR:
-#         docker run -it --rm -v /Users/MyMac/OpenFOAM/espinosa-2.4.0:/home/ofuser/OpenFOAM/ofuser-2.4.0 alexisespinosa/openfoam:2.4.0
+#         docker run -it --rm -v /Users/MyMac/OpenFOAM/espinosa-v1812:/home/ofuser/OpenFOAM/ofuser-v1812 alexisespinosa/openfoam:v1812
 #         (This should prompt you into the container itself) 
 #     2.6 Within the container, cd to the application dir and compile (you can use the environmental variables):
 #         2.6.1 cd $WM_PROJECT_USER_DIR/applications/my_icoFoam
 #         2.6.2 wclean
 #         2.6.3 wmake
 #               (Now the executable of my_icoFoam should be visible in the container at):
-#               /home/ofuser/OpenFOAM/ofuser-2.4.0/platforms/linux64GccDPInt32Opt/bin/my_icoFoam
-#     1.1 (In the login node): sg $PAWSEY_PROJECT -c 'shifter pull alexisespinosa/openfoam:2.4.0'
+#               /home/ofuser/OpenFOAM/ofuser-v1812/platforms/linux64GccDPInt32Opt/bin/my_icoFoam
+#     1.1 (In the login node): sg $PAWSEY_PROJECT -c 'shifter pull alexisespinosa/openfoam:v1812'
 # 2.0 Run the container interactively:
 #     2.1 (At pawsey computer):salloc -p debugq
 #     2.2 module load shifter
@@ -496,27 +507,27 @@ WORKDIR /home/ofuser
 #         2.3.1  cd $MYSCRATCH/<workingDir> 
 #     2.4 scp your developed application into your userOpenFOAM directory in $MYGROUP in Pawsey:
 #         2.4.1 (At your local host use scp):
-#               scp -r myLocalDir/OpenFOAM/espinosa-2.4.0/applications/my_icoFoam \
-#               espinosa@hpc-data.pawsey.org.au:/group/pawseyXXXX/espinosa/OpenFOAM/espinosa-2.4.0/applications 
+#               scp -r myLocalDir/OpenFOAM/espinosa-v1812/applications/my_icoFoam \
+#               espinosa@hpc-data.pawsey.org.au:/group/pawseyXXXX/espinosa/OpenFOAM/espinosa-v1812/applications 
 #     2.5 (At pawsey computer): run interactively mounting your userOpenFOAM directory in the place of $WM_PROJECT_USER_DIR:
-#         shifter run --mount=type=bind,source=$MYGROUP/OpenFOAM/espinosa-2.4.0,destination=/home/ofuser/OpenFOAM/ofuser-2.4.0 alexisespinosa/openfoam:2.4.0
+#         shifter run --mount=type=bind,source=$MYGROUP/OpenFOAM/espinosa-v1812,destination=/home/ofuser/OpenFOAM/ofuser-v1812 alexisespinosa/openfoam:v1812
 #         (This should prompt you into the container itself) 
 #     2.6 Within the container, cd to the application dir and compile (you can use the environmental variables):
 #         2.6.1 cd $WM_PROJECT_USER_DIR/applications/my_icoFoam
 #         2.6.2 wclean
 #         2.6.3 wmake
 #               (Now the executable of my_icoFoam should be visible in the container at):
-#               /home/ofuser/OpenFOAM/ofuser-2.4.0/platforms/linux64GccDPInt32Opt/bin/my_icoFoam
+#               /home/ofuser/OpenFOAM/ofuser-v1812/platforms/linux64GccDPInt32Opt/bin/my_icoFoam
 #               (which is the same as):
 #               $WM_PROJECT_USER_DIR/platforms/linux64GccDPInt32Opt/bin/my_icoFoam
 #               (which is the same as, inside or outside the container):
-#               $MYSCRATCH/OpenFOAM/espinosa-2.4.0/platforms/linux64GccDPInt32Opt/bin/my_icoFoam
+#               $MYSCRATCH/OpenFOAM/espinosa-v1812/platforms/linux64GccDPInt32Opt/bin/my_icoFoam
 #     2.7 Exit the interactive container
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-#Example script for running your own solver (created above) with openfoam:2.4.0 container:
+#Example script for running your own solver (created above) with openfoam:v1812 container:
 #1. cd to the working dir (In this case, this working dir has the tutorial "cavity")
 #2. run the script: sbatch runContainer.slm
 #   2.1 The script contains: (What is in the script is after the mark ##|):
@@ -530,12 +541,12 @@ WORKDIR /home/ofuser
 ##|module load shifter
 ##|#----------
 ##|#Setting some preliminary environmental variables
-##|export OF_VERSION=2.4.0
+##|export OF_VERSION=v1812
 ##|
 ##|echo "Creating Mesh with blockMesh ..."
 ##|srun --export=all -n 1 shifter run alexisespinosa/openfoam:$OF_VERSION blockMesh
 ##|echo "Running parallel solver ..."
-##|srun --export=all -n 1 shifter run --mount=type=bind,source=$MYGROUP/OpenFOAM/espinosa-2.4.0,destination=/home/ofuser/OpenFOAM/ofuser-2.4.0 alexisespinosa/openfoam:$OF_VERSION my_icoFoam > logRun 2>&1
+##|srun --export=all -n 1 shifter run --mount=type=bind,source=$MYGROUP/OpenFOAM/espinosa-v1812,destination=/home/ofuser/OpenFOAM/ofuser-v1812 alexisespinosa/openfoam:$OF_VERSION my_icoFoam > logRun 2>&1
 
 
 

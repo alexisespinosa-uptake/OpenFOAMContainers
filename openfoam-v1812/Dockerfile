@@ -181,9 +181,9 @@ RUN cp ${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh $OFPREF
  && echo 'export MPI_ROOT="/usr"' >> ${OFPREFS} \
  && echo 'export MPI_ARCH_FLAGS="-DMPICH_SKIP_MPICXX"' >> ${OFPREFS} \
 ##ProblemsWithGcc7.Using next line instead: && echo 'export MPI_ARCH_INC="-isystem $MPI_ROOT/include"' >> ${OFPREFS} \
- && echo 'export MPI_ARCH_INC="-I $MPI_ROOT/include"' >> ${OFPREFS} \
-##MakingItSimilarTo:mplibMPICH inNextLine: && echo 'export MPI_ARCH_LIBS="-L$MPI_ROOT/lib -lmpich"' >> ${OFPREFS}
- && echo 'export MPI_ARCH_LIBS="-L$(MPI_ARCH_PATH)/lib$(WM_COMPILER_LIB_ARCH) -L$(MPI_ARCH_PATH)/lib -lmpich -lrt"' >> ${OFPREFS}
+ && echo 'export MPI_ARCH_INC="-I ${MPI_ROOT}/include"' >> ${OFPREFS} \
+##MakingItSimilarToRule:mplibMPICH inNextLine: && echo 'export MPI_ARCH_LIBS="-L$MPI_ROOT/lib -lmpich"' >> ${OFPREFS}
+ && echo 'export MPI_ARCH_LIBS="-L${MPI_ROOT}/lib${WM_COMPILER_LIB_ARCH} -L${MPI_ROOT}/lib -lmpich -lrt"' >> ${OFPREFS}
 
 #...........
 #Step Additional
@@ -359,7 +359,13 @@ RUN chmod -R 777 $OFINSTDIR
 #          (do not remove the 0 directory which has the initial conditions)
 #      8.3 docker run --rm -v $PWD:/cavity -w /cavity --user $(id -u):$(id -g) alexisespinosa/openfoam:v1812 blockMesh
 #      8.4 docker run --rm -v $PWD:/cavity -w /cavity --user $(id -u):$(id -g) alexisespinosa/openfoam:v1812 icoFoam
-#      8.5 If everything ran fine, then this container is ready for Pawsey
+#      8.5 If everything ran fine, then this container is pretty much ready for Pawsey
+#  9.  As a double check, print again the environmental variables and compare them with the first print (3. above)
+#      and use them for the final check when printing the environmental variables while the container is
+#      being ran by shifter in Pawsey.
+#      9.1 You can execute the printenv in a command line non-interactive run:
+#          docker run --rm -v $PWD:/localDir --user $(id -u):$(id -g) alexisespinosa/openfoam:v1812 bash -c 'printenv > /localDir/variables/raw_docker.env'
+#
 #
 #----------------------------:
 #  5.1 Copy&Paste the list below this line. (Remove every active of commented ENV lines already existing in this file):
@@ -385,7 +391,7 @@ ENV FOAM_UTILITIES=/MySoftware/OpenFOAM/OpenFOAM-v1812/applications/utilities
 ENV LD_LIBRARY_PATH=/MySoftware/OpenFOAM/ThirdParty-v1812/platforms/linux64Gcc/fftw-3.3.7/lib64:/MySoftware/OpenFOAM/ThirdParty-v1812/platforms/linux64Gcc/CGAL-4.9.1/lib64:/MySoftware/OpenFOAM/ThirdParty-v1812/platforms/linux64Gcc/boost_1_64_0/lib64:/MySoftware/OpenFOAM/ThirdParty-v1812/platforms/linux64Gcc/gperftools-2.5/lib64:/MySoftware/OpenFOAM/OpenFOAM-v1812/platforms/linux64GccDPInt64Opt/lib/mpi-system:/MySoftware/OpenFOAM/ThirdParty-v1812/platforms/linux64GccDPInt64/lib/mpi-system:/home/ofuser/OpenFOAM/ofuser-v1812/platforms/linux64GccDPInt64Opt/lib:/MySoftware/OpenFOAM/OpenFOAM-v1812/site/v1812/platforms/linux64GccDPInt64Opt/lib:/MySoftware/OpenFOAM/OpenFOAM-v1812/platforms/linux64GccDPInt64Opt/lib:/MySoftware/OpenFOAM/ThirdParty-v1812/platforms/linux64GccDPInt64/lib:/MySoftware/OpenFOAM/OpenFOAM-v1812/platforms/linux64GccDPInt64Opt/lib/dummy
 ENV MPI_ARCH_FLAGS=-DMPICH_SKIP_MPICXX
 ENV MPI_ARCH_INC="-I /usr/include"
-ENV MPI_ARCH_LIBS="-L/usr/lib -lmpich"
+ENV MPI_ARCH_LIBS="-L/usr/lib64 -L/usr/lib -lmpich -lrt"
 ENV MPI_ARCH_PATH=/usr
 ENV MPI_ROOT=/usr
 ENV PATH=/MySoftware/OpenFOAM/ThirdParty-v1812/platforms/linux64Gcc/gperftools-2.5/bin:/home/ofuser/OpenFOAM/ofuser-v1812/platforms/linux64GccDPInt64Opt/bin:/MySoftware/OpenFOAM/OpenFOAM-v1812/site/v1812/platforms/linux64GccDPInt64Opt/bin:/MySoftware/OpenFOAM/OpenFOAM-v1812/platforms/linux64GccDPInt64Opt/bin:/MySoftware/OpenFOAM/OpenFOAM-v1812/bin:/MySoftware/OpenFOAM/OpenFOAM-v1812/wmake:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -415,6 +421,12 @@ ENV WM_PROJECT_VERSION=v1812
 ENV WM_THIRD_PARTY_DIR=/MySoftware/OpenFOAM/ThirdParty-v1812
 
 #...........
+#For some wicked reason, shifter is loosing the definition of some variables these variables are redefiened here:
+####ENV FOAM_APPBIN=/MySoftware/OpenFOAM/OpenFOAM-v1812/platforms/linux64GccDPInt64Opt/bin
+####ENV WM_CXXFLAGS="-fPIC -std=c++11 -m64"
+####ENV WM_PROJECT_DIR=/MySoftware/OpenFOAM/OpenFOAM-v1812
+
+#...........
 #Writing the environment variables for the installation so far:
 RUN cd $WM_PROJECT_DIR \
  && printenv > environment_vars_defined.env
@@ -426,7 +438,7 @@ RUN cd $WM_PROJECT_DIR \
 #But modified a little bit in order to  let apt-get install -y to work fine
 # for further installations on top of this image
 RUN apt-get clean \
- && mv /var/lib/apt/lists/partial /tmp \
+ && rm -rf /var/lib/apt/lists/partial \
  && mkdir -p /var/lib/apt/lists/partial \
  && apt-get clean \
  && apt-get update
@@ -547,6 +559,3 @@ WORKDIR /home/ofuser
 ##|srun --export=all -n 1 shifter run alexisespinosa/openfoam:$OF_VERSION blockMesh
 ##|echo "Running parallel solver ..."
 ##|srun --export=all -n 1 shifter run --mount=type=bind,source=$MYGROUP/OpenFOAM/espinosa-v1812,destination=/home/ofuser/OpenFOAM/ofuser-v1812 alexisespinosa/openfoam:$OF_VERSION my_icoFoam > logRun 2>&1
-
-
-

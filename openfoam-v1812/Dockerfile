@@ -332,8 +332,10 @@ RUN chmod -R 777 $OFINSTDIR
 #          sort raw_vars.env -o sorted_vars.env 
 #      4.2 Remove unnecesary variables (not related to openfoam) within the sorted_vars.env file.
 #          Varibles related to openfoam are: BOOST_*, CGAL_*,FFTW_*, FOAM_*,LD_*,MPI_*,ParaView_*,
-#          PATH,PV_*,SCOTCH_*,WM_*  
-#      4.3 Use double quotes for variables with spaces (for example for flags) within sorted_vars.env
+#          PATH,PV_*,SCOTCH_*,WM_*:
+#          cp sorted_vars.env cleaned_vars.env
+#          vi cleaned_vars.env  
+#      4.3 Use double quotes for variables with spaces (for example for flags) within cleaned_vars.env
 #          For example: WM_CXXFLAGS=-m64 -fPIC -std=c++0x -> WM_CXXFLAGS="-m64 -fPIC -std=c++0x" 
 #          (perform a search for blank spaces in the whole file to catch those variables).
 #      4.4 Add the Docker command ENV at the beggining of all lines to set the environmental variables
@@ -365,6 +367,7 @@ RUN chmod -R 777 $OFINSTDIR
 #      being ran by shifter in Pawsey.
 #      9.1 You can execute the printenv in a command line non-interactive run:
 #          docker run --rm -v $PWD:/localDir --user $(id -u):$(id -g) alexisespinosa/openfoam:v1812 bash -c 'printenv > /localDir/variables/raw_docker.env'
+#      9.2 Order and clean the file as in instructions 4. above and generate a cleaned_docker.env file
 #
 #
 #----------------------------:
@@ -373,7 +376,7 @@ RUN chmod -R 777 $OFINSTDIR
 ENV BOOST_ARCH_PATH=/MySoftware/OpenFOAM/ThirdParty-v1812/platforms/linux64Gcc/boost_1_64_0
 ENV CGAL_ARCH_PATH=/MySoftware/OpenFOAM/ThirdParty-v1812/platforms/linux64Gcc/CGAL-4.9.1
 ENV FFTW_ARCH_PATH=/MySoftware/OpenFOAM/ThirdParty-v1812/platforms/linux64Gcc/fftw-3.3.7
-ENV FOAM_APPBIN=/MySoftware/OpenFOAM/OpenFOAM-v1812/platforms/linux64GccDPInt64Opt/bin
+#WillBeDefinedAtTheEndDueToShifterFailure:ENV FOAM_APPBIN=/MySoftware/OpenFOAM/OpenFOAM-v1812/platforms/linux64GccDPInt64Opt/bin
 ENV FOAM_APP=/MySoftware/OpenFOAM/OpenFOAM-v1812/applications
 ENV FOAM_ETC=/MySoftware/OpenFOAM/OpenFOAM-v1812/etc
 ENV FOAM_EXT_LIBBIN=/MySoftware/OpenFOAM/ThirdParty-v1812/platforms/linux64GccDPInt64/lib
@@ -404,7 +407,7 @@ ENV WM_COMPILE_OPTION=Opt
 ENV WM_COMPILER=Gcc
 ENV WM_COMPILER_LIB_ARCH=64
 ENV WM_COMPILER_TYPE=system
-ENV WM_CXXFLAGS="-fPIC -std=c++11 -m64"
+#WillBeDefinedAtTheEndDueToShifterFailure:ENV WM_CXXFLAGS="-fPIC -std=c++11 -m64"
 ENV WM_CXX=g++
 ENV WM_DIR=/MySoftware/OpenFOAM/OpenFOAM-v1812/wmake
 ENV WM_LABEL_OPTION=Int64
@@ -413,18 +416,21 @@ ENV WM_LDFLAGS=-m64
 ENV WM_MPLIB=SYSTEMMPI
 ENV WM_OPTIONS=linux64GccDPInt64Opt
 ENV WM_PRECISION_OPTION=DP
-ENV WM_PROJECT_API=1812
-ENV WM_PROJECT_DIR=/MySoftware/OpenFOAM/OpenFOAM-v1812
+#WillBeDefinedAtTheEndDueToShifterFailure:ENV WM_PROJECT_API=1812
+#WillBeDefinedAtTheEndDueToShifterFailure:ENV WM_PROJECT_DIR=/MySoftware/OpenFOAM/OpenFOAM-v1812
 ENV WM_PROJECT=OpenFOAM
 ENV WM_PROJECT_USER_DIR=/home/ofuser/OpenFOAM/ofuser-v1812
 ENV WM_PROJECT_VERSION=v1812
 ENV WM_THIRD_PARTY_DIR=/MySoftware/OpenFOAM/ThirdParty-v1812
 
-#...........
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#Defining the lost variables here (at the end) due to shifter failure
 #For some wicked reason, shifter is loosing the definition of some variables these variables are redefiened here:
-####ENV FOAM_APPBIN=/MySoftware/OpenFOAM/OpenFOAM-v1812/platforms/linux64GccDPInt64Opt/bin
-####ENV WM_CXXFLAGS="-fPIC -std=c++11 -m64"
-####ENV WM_PROJECT_DIR=/MySoftware/OpenFOAM/OpenFOAM-v1812
+ENV FOAM_APPBIN=/MySoftware/OpenFOAM/OpenFOAM-v1812/platforms/linux64GccDPInt64Opt/bin
+ENV WM_CXXFLAGS="-fPIC -std=c++11 -m64"
+ENV WM_PROJECT_DIR=/MySoftware/OpenFOAM/OpenFOAM-v1812
+ENV WM_PROJECT_API=1812
 
 #...........
 #Writing the environment variables for the installation so far:
@@ -463,6 +469,30 @@ WORKDIR /home/ofuser
 #2. Run the following commands in zeus or magnus:
 #   2.1 module load shifter/18.06.00
 #   2.2 sg $PAWSEY_PROJECT -c 'shifter pull alexisespinosa/openfoam:v1812'
+#   2.3 Execute a basic test (display the help message of icoFoam):
+#       shifter run alexisespinosa/openfoam:v1812 icoFoam -help
+#   2.4 Print the environmental variables when using shifter. VERY IMPORTANT:
+#       For some weird reason, shifter may some variables when running the image.
+#       If that happens, these variables need to be unset (as those marked with
+#           "#WillBeDefinedAtTheEndDueToShifterFailure"
+#       In the list of several "ENV"s above.
+#       And then defined again in the section:
+#           "Defining the lost variables here (at the end) due to shifter failure"
+#       Order of definition is important to skip this shifter problem.
+#       (More info is in the helpdesk ticket: GS-10054)
+#       2.4.1 Execute the printenv:
+#             shifter run alexisespinosa/openfoam:v1812 printenv > raw_shifter.env
+#       2.4.2 Order and clean this list of variables as in instruction 4. above above and generate a cleaned_shifter.env file
+#       2.4.3 Compare the two cleaned list of variables (scp the files into a common location first):
+#             diff cleaned_docker.env cleaned_shifter.env
+#       2.4.4 If diffences are detected, then comment the definition of those variables
+#             And add the definition then at the section "Defining the lost variables .."
+#             So that they are defined at the end of the list of ENV definitions.
+#   2.5 Repeat the creation of the container as explained above above in the instructions: BUILDING THE CONTAINER    
+#   2.6 Repeat this instructions (TESTING AT PAWSEY) until there are not lost variables
+#3. Run a tutorial test case for openfoam (as explained below) and proceed with your own workflow if succeded
+#       
+#       
 
 #---------------------------------------------------------------
 #---------------------------------------------------------------

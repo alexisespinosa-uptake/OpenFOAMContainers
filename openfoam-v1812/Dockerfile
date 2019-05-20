@@ -124,15 +124,23 @@ WORKDIR $OFINSTDIR
 #https://github.com/phusion/baseimage-docker/issues/319
 #But harmless.
 RUN apt-get update -qq\
- &&  apt-get -y --no-install-recommends install \
+ &&  apt-get -y --no-install-recommends --no-install-suggests install \
    wget \
    build-essential flex bison cmake zlib1g-dev \
-   libboost-system-dev libboost-thread-dev \
+#AEG:NoBoost:   libboost-system-dev libboost-thread-dev \
 #AEG:NoOpenMPI:   libopenmpi-dev openmpi-bin \
    gnuplot libreadline-dev libncurses-dev libxt-dev \
    qt5-default libqt5x11extras5-dev libqt5help5 qtdeclarative5-dev qttools5-dev \
    libqtwebkit-dev freeglut3-dev libqt5opengl5-dev texinfo \
-   libscotch-dev libcgal-dev python python-dev \
+#AEG:No scotch because it installs openmpi which later messes up with shifter at pawsey
+#    Therefore, ThirdParty scotch is the one to be installed and used by openfoam.
+#AEG:NoScotch:   libscotch-dev \
+#AEG:Do not really want CGAL, as the ThirdParty version is the one to be used by openfoam,
+#    but it is left alive because it installs some other libraries that are indeed used by
+#    the ThirdParty installation. Other cleaner way would have been to install those libraries
+#    by themselves.
+   libcgal-dev \
+   python python-dev \
    libglu1-mesa-dev \
 #AEG:I found the following was needed to install  FlexLexer.h
    libfl-dev \
@@ -211,6 +219,12 @@ RUN echo 'export WM_LABEL_SIZE=64' >> ${OFPREFS}
 #### && export QT_SELECT=qt5 \
 #### && ./makeParaView -python -mpi -python-lib /usr/lib/x86_64-linux-gnu/libpython2.7.so.1.0 2>&1 | tee log.makePV
 ######No need for wmRefresh as settings will be lost outside this RUN command
+
+#...........
+#Step 11.
+#Note: will be done by parts
+#Note2: No system libraries are defined for the ThirdParty tools, even if some of them have been installed
+#       like libcgal-dev. Then CGAL will be compiled from the ThirdParty packages.
 
 #...........
 #Step 11.A (Additional) From openfoamwiki instructions (modified to only compile third party)
@@ -438,6 +452,7 @@ RUN cd $WM_PROJECT_DIR \
  && printenv > environment_vars_defined.env
 #---------------------------------------------------------------
 #---------------------------------------------------------------
+#...........
 #Trick for making apt-get work again. This is very weird.
 #Following the solution proposed here:
 #https://sillycodes.com/quick-tip-couldnt-create-temporary-file/

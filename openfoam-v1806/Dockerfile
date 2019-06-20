@@ -635,14 +635,18 @@ WORKDIR /home/ofuser
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 ## IV. Run a case by submitting a slurm script
+#0. Pull the container to be used into pawsey
+#   0.0 ssh espinosa@magnus.pawsey.org.au
+#   0.1 module load shifter
+#   0.2 sg $PAWSEY_PROJECT -c 'shifter pull alexisespinosa/openfoam:v1806'
 #1. cd to the working directory (In this example, this working dir has the name "myTutorials")
 #   cd $MYSCRATCH/myTutorials
 #2. Create a useful case to run. In this example the case will be a tutorial extracted from the container:
-#   2.1 module load shifter
-#   2.2 srun --export=all -n 1 shifter run alexisespinosa/openfoam:v1806 bash -c 'cp $FOAM_TUTORIALS/multiphase/interFoam/RAS/damBreak/damBreak .'
-#3. run the slurm script "runContainer.sh":
-#   sbatch runContainer.sh
-#   3.1 The slurm script "runContainer.sh" is printed below: (What is in the script is after the mark ##|):
+#   2.0 module load shifter (If it has not been loaded)
+#   2.1 srun --export=all -n 1 shifter run alexisespinosa/openfoam:v1806 bash -c 'cp $FOAM_TUTORIALS/multiphase/interFoam/RAS/damBreak/damBreak .'
+#3. Create a slurm script "runContainer.sh" and run it:
+#   3.1 sbatch runContainer.sh
+#   3.2 The slurm script "runContainer.sh" should contain the following lines: (remove the mark ##| from all the lines):
 ##|#!/bin/bash -l
 ##|#SBATCH --export=NONE
 ##|#SBATCH --time=00:15:00

@@ -167,7 +167,7 @@ RUN apt-get update -qq\
 #    the ThirdParty installation. Other cleaner way would have been to install those libraries
 #    by themselves.
    libcgal-dev \
-   python python-dev \
+#AEG:Python has been already installed in Step B.(above)  python python-dev \
    libglu1-mesa-dev \
 #AEG:Not installing the mentioned stuff for the Virtual Machine Users
 #AEG:I found the following was needed to install  FlexLexer.h
@@ -241,7 +241,7 @@ RUN sed -i $'s@^FOAM_INST_DIR=.*@FOAM_INST_DIR='"${OFINSTDIR}"'@' ${OFBASHRC} \
 
 #...........
 #Step 8. From openfoamwiki instructions (modified: adding the WM_LABEL_SIZE into the prefs.sh file)
-RUN echo 'export WM_LABEL_SIZE=64' >> ${OFPREFS}
+#AEG. Commenting for using the default WM_LABEL_SIZE=32:RUN echo 'export WM_LABEL_SIZE=64' >> ${OFPREFS}
 
 #...........
 #Step Additional C. PAUSE TO CHECK MODIFICATIONS OF THE prefs.sh and bashrc CONFIGURATION FILES
@@ -253,16 +253,16 @@ RUN echo 'export WM_LABEL_SIZE=64' >> ${OFPREFS}
 #
 #You can check if changes were performed properly by running the latest useful layer as a container.
 #Check the messages of the build and you will see something like this:
-##-###|Step 28/94 : RUN echo 'export WM_LABEL_SIZE=64' >> ${OFPREFS}
+##-###|Step 27/42 : RUN sed -i $'s@^FOAM_INST_DIR=.*@FOAM_INST_DIR='"${OFINSTDIR}"'@' ${OFBASHRC}  && sed -i $'s@^export WM_PROJECT_USER_DIR=.*@export WM_PROJECT_USER_DIR="'"${OFUSERDIR}/ofuser"'-$WM_PROJECT_VERSION"@' ${OFBASHRC}
 ##-###| ---> Running in 3ffc91eab8f6
 ##-###|Removing intermediate container 3ffc91eab8f6
 ##-###| ---> 93a711ddc0e2
-##-###|Step 29/94 : RUN stopHere
+##-###|Step 28/93 : RUN stopHere
 ##-###| ---> Running in 93f13fcdefa5
 ##-###|/bin/bash: stopHere: command not found
 ##-###|The command '/bin/bash -c stopHere' returned a non-zero code: 127
 #Then you can run the latest layer with:
-#docker run -it --rm docker run -it --rm 93a711ddc0e2
+#docker run -it --rm 93a711ddc0e2
 #And check the prefs.sh and bashrc files.
 
 #...........
@@ -324,12 +324,13 @@ RUN . ${OFBASHRC} \
  && printenv > environment_vars_raw.env
 
 #...........
-#Create the openfoam user directory
-USER ofuser
-RUN mkdir -p ${OFUSERDIR}/ofuser-${OFVERSION} \
+#Create the openfoam user directory and their useful directories 
+RUN . ${OFBASHRC} \
+ && mkdir -p $FOAM_RUN \
+ && mkdir -p $FOAM_USER_APPBIN \
+ && mkdir -p $FOAM_USER_LIBBIN \
+ && chown -R ofuser:ofuser ${OFUSERDIR} \
  && chmod -R 777 ${OFUSERDIR}
-USER root
-
 
 #...........
 #Allowing normal users to read,write and execute on the OF installation
@@ -485,30 +486,30 @@ RUN chmod -R 777 $OFINSTDIR
 ENV BOOST_ARCH_PATH=/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64Gcc/boost_1_64_0
 ENV CGAL_ARCH_PATH=/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64Gcc/CGAL-4.9.1
 ENV FFTW_ARCH_PATH=/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64Gcc/fftw-3.3.7
-#WillBeDefinedAtTheEndDueToShifterFailure:ENV FOAM_APPBIN=/MySoftware/OpenFOAM/OpenFOAM-v1806/platforms/linux64GccDPInt64Opt/bin
+#WillBeDefinedAtTheEndDueToShifterFailure:ENV FOAM_APPBIN=/MySoftware/OpenFOAM/OpenFOAM-v1806/platforms/linux64GccDPInt32Opt/bin
 ENV FOAM_APP=/MySoftware/OpenFOAM/OpenFOAM-v1806/applications
 ENV FOAM_ETC=/MySoftware/OpenFOAM/OpenFOAM-v1806/etc
-ENV FOAM_EXT_LIBBIN=/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64GccDPInt64/lib
-ENV FOAM_LIBBIN=/MySoftware/OpenFOAM/OpenFOAM-v1806/platforms/linux64GccDPInt64Opt/lib
+ENV FOAM_EXT_LIBBIN=/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64GccDPInt32/lib
+ENV FOAM_LIBBIN=/MySoftware/OpenFOAM/OpenFOAM-v1806/platforms/linux64GccDPInt32Opt/lib
 ENV FOAM_MPI=mpi-system
 ENV FOAM_RUN=/home/ofuser/OpenFOAM/ofuser-v1806/run
 ENV FOAM_SETTINGS=
-ENV FOAM_SITE_APPBIN=/MySoftware/OpenFOAM/site/v1806/platforms/linux64GccDPInt64Opt/bin
-ENV FOAM_SITE_LIBBIN=/MySoftware/OpenFOAM/site/v1806/platforms/linux64GccDPInt64Opt/lib
+ENV FOAM_SITE_APPBIN=/MySoftware/OpenFOAM/site/v1806/platforms/linux64GccDPInt32Opt/bin
+ENV FOAM_SITE_LIBBIN=/MySoftware/OpenFOAM/site/v1806/platforms/linux64GccDPInt32Opt/lib
 ENV FOAM_SOLVERS=/MySoftware/OpenFOAM/OpenFOAM-v1806/applications/solvers
 ENV FOAM_SRC=/MySoftware/OpenFOAM/OpenFOAM-v1806/src
 ENV FOAM_TUTORIALS=/MySoftware/OpenFOAM/OpenFOAM-v1806/tutorials
-ENV FOAM_USER_APPBIN=/home/ofuser/OpenFOAM/ofuser-v1806/platforms/linux64GccDPInt64Opt/bin
-ENV FOAM_USER_LIBBIN=/home/ofuser/OpenFOAM/ofuser-v1806/platforms/linux64GccDPInt64Opt/lib
+ENV FOAM_USER_APPBIN=/home/ofuser/OpenFOAM/ofuser-v1806/platforms/linux64GccDPInt32Opt/bin
+ENV FOAM_USER_LIBBIN=/home/ofuser/OpenFOAM/ofuser-v1806/platforms/linux64GccDPInt32Opt/lib
 ENV FOAM_UTILITIES=/MySoftware/OpenFOAM/OpenFOAM-v1806/applications/utilities
-ENV LD_LIBRARY_PATH=/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64Gcc/fftw-3.3.7/lib64:/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64Gcc/CGAL-4.9.1/lib64:/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64Gcc/boost_1_64_0/lib64:/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64Gcc/gperftools-2.5/lib64:/MySoftware/OpenFOAM/OpenFOAM-v1806/platforms/linux64GccDPInt64Opt/lib/mpi-system:/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64GccDPInt64/lib/mpi-system:/home/ofuser/OpenFOAM/ofuser-v1806/platforms/linux64GccDPInt64Opt/lib:/MySoftware/OpenFOAM/site/v1806/platforms/linux64GccDPInt64Opt/lib:/MySoftware/OpenFOAM/OpenFOAM-v1806/platforms/linux64GccDPInt64Opt/lib:/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64GccDPInt64/lib:/MySoftware/OpenFOAM/OpenFOAM-v1806/platforms/linux64GccDPInt64Opt/lib/dummy
+ENV LD_LIBRARY_PATH=/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64Gcc/fftw-3.3.7/lib64:/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64Gcc/CGAL-4.9.1/lib64:/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64Gcc/boost_1_64_0/lib64:/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64Gcc/gperftools-2.5/lib64:/MySoftware/OpenFOAM/OpenFOAM-v1806/platforms/linux64GccDPInt32Opt/lib/mpi-system:/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64GccDPInt32/lib/mpi-system:/home/ofuser/OpenFOAM/ofuser-v1806/platforms/linux64GccDPInt32Opt/lib:/MySoftware/OpenFOAM/site/v1806/platforms/linux64GccDPInt32Opt/lib:/MySoftware/OpenFOAM/OpenFOAM-v1806/platforms/linux64GccDPInt32Opt/lib:/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64GccDPInt32/lib:/MySoftware/OpenFOAM/OpenFOAM-v1806/platforms/linux64GccDPInt32Opt/lib/dummy
 ENV MPI_ARCH_FLAGS=-DMPICH_SKIP_MPICXX
 ENV MPI_ARCH_INC="-I /usr/include"
 ENV MPI_ARCH_LIBS="-L/usr/lib -L/usr/lib -lmpich -lrt"
 ENV MPI_ARCH_PATH=/usr
 ENV MPI_ROOT=/usr
-ENV PATH=/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64Gcc/gperftools-2.5/bin:/home/ofuser/OpenFOAM/ofuser-v1806/platforms/linux64GccDPInt64Opt/bin:/MySoftware/OpenFOAM/site/v1806/platforms/linux64GccDPInt64Opt/bin:/MySoftware/OpenFOAM/OpenFOAM-v1806/platforms/linux64GccDPInt64Opt/bin:/MySoftware/OpenFOAM/OpenFOAM-v1806/bin:/MySoftware/OpenFOAM/OpenFOAM-v1806/wmake:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENV SCOTCH_ARCH_PATH=/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64GccDPInt64/scotch_6.0.3
+ENV PATH=/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64Gcc/gperftools-2.5/bin:/home/ofuser/OpenFOAM/ofuser-v1806/platforms/linux64GccDPInt32Opt/bin:/MySoftware/OpenFOAM/site/v1806/platforms/linux64GccDPInt32Opt/bin:/MySoftware/OpenFOAM/OpenFOAM-v1806/platforms/linux64GccDPInt32Opt/bin:/MySoftware/OpenFOAM/OpenFOAM-v1806/bin:/MySoftware/OpenFOAM/OpenFOAM-v1806/wmake:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV SCOTCH_ARCH_PATH=/MySoftware/OpenFOAM/ThirdParty-v1806/platforms/linux64GccDPInt32/scotch_6.0.3
 ENV WM_ARCH=linux64
 ENV WM_ARCH_OPTION=64
 ENV WM_CC=gcc
@@ -520,11 +521,11 @@ ENV WM_COMPILER_TYPE=system
 #WillBeDefinedAtTheEndDueToShifterFailure:ENV WM_CXXFLAGS="-fPIC -std=c++11 -m64"
 ENV WM_CXX=g++
 ENV WM_DIR=/MySoftware/OpenFOAM/OpenFOAM-v1806/wmake
-ENV WM_LABEL_OPTION=Int64
-ENV WM_LABEL_SIZE=64
+ENV WM_LABEL_OPTION=Int32
+ENV WM_LABEL_SIZE=32
 ENV WM_LDFLAGS=-m64
 ENV WM_MPLIB=SYSTEMMPI
-ENV WM_OPTIONS=linux64GccDPInt64Opt
+ENV WM_OPTIONS=linux64GccDPInt32Opt
 ENV WM_OSTYPE=POSIX
 ENV WM_PRECISION_OPTION=DP
 #WillBeDefinedAtTheEndDueToShifterFailure:ENV WM_PROJECT_DIR=/MySoftware/OpenFOAM/OpenFOAM-v1806
@@ -538,7 +539,7 @@ ENV WM_THIRD_PARTY_DIR=/MySoftware/OpenFOAM/ThirdParty-v1806
 #Comment the problematic variables above and mark them with the tag #WillBeDefinedAtTheEndDueToShifterFailure
 #and define them at the end of the list (immediately below this comment)
 #----------------------------:
-ENV FOAM_APPBIN=/MySoftware/OpenFOAM/OpenFOAM-v1806/platforms/linux64GccDPInt64Opt/bin
+ENV FOAM_APPBIN=/MySoftware/OpenFOAM/OpenFOAM-v1806/platforms/linux64GccDPInt32Opt/bin
 ENV WM_CXXFLAGS="-fPIC -std=c++11 -m64"
 ENV WM_PROJECT_INST_DIR=/MySoftware/OpenFOAM
 ENV WM_PROJECT_DIR=/MySoftware/OpenFOAM/OpenFOAM-v1806
@@ -549,8 +550,7 @@ RUN cd $WM_PROJECT_DIR \
  && printenv > environment_vars_defined.env
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-#...........
-#Trick for making apt-get work again. This is very weird.
+# F. Trick for making apt-get work again. This is very weird.
 #Following the solution proposed here:
 #https://sillycodes.com/quick-tip-couldnt-create-temporary-file/
 #But modified a little bit in order to  let apt-get install -y to work fine
@@ -564,7 +564,7 @@ RUN apt-get clean \
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-## Starting as ofuser by default
+# G. Starting as ofuser by default
 USER ofuser
 WORKDIR /home/ofuser
 

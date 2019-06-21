@@ -1,7 +1,7 @@
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-#Initial main definintion
+# A. Initial main definintion
 FROM alexisespinosa/openfoam:v1806
 LABEL maintainer="Alexis.Espinosa@pawsey.org.au"
 #OpenFOAM version to use
@@ -11,7 +11,7 @@ USER root
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-#This section is for installing the additional needed dependencies
+# B. This section is for installing the additional needed dependencies
 RUN apt-get update -qq\
  &&  apt-get -y --no-install-recommends --no-install-suggests install \
    subversion \
@@ -23,7 +23,7 @@ RUN apt-get update -qq\
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-#This section is for installing waves2Foam
+# C. This section is for installing waves2Foam
 WORKDIR /MySoftware
 RUN svn co http://svn.code.sf.net/p/openfoam-extend/svn/trunk/Breeder_1.6/other/waves2Foam
 ARG W2FINSTDIR=/MySoftware/waves2Foam
@@ -40,6 +40,11 @@ RUN cp ./bin/bashrc.org ./bin/bashrc \
 RUN . ./bin/bashrc \
  &&  ./Allwmake 2>&1 | tee log.make \
  && printenv > "raw_waves2Foam.env"
+
+#........
+#Fixing ownerships and permissions
+RUN chown -R ofuser:ofuser $WM_PROJECT_USER_DIR \
+ && chmod -R 777 $WM_PROJECT_USER_DIR
 
 #...........
 #Allowing normal users to read,write and execute on the waves2FOAM installation directory

@@ -4,7 +4,7 @@
 
 The variable $WM_PROJECT_USER_DIR is supposed to be pointing to the root of the path where users' applications
 will reside. Usually, users also put their own code there and even posibly use it as the root of the path for their
-cases to be ran. Indeed, the common setup is that FOAM_RUN=$WM_PROJECT_USER_DIR/run
+cases to be ran. Indeed, the common setup for related variables is: FOAM_RUN=$WM_PROJECT_USER_DIR/run, FOAM_USER_APPBIN=$WM_PROJECT_USER_DIR/platforms/linux64GccDPInt32Opt/bin, FOAM_USER_LIBBIN=$WM_PROJECT_USER_DIR/platforms/linux64GccDPInt32Opt/lib.
 
 The Pawsey container has already this variable pointing to a directory within the **"ofuser"** home directory.
 You can check that with:
@@ -13,13 +13,13 @@ docker run --rm alexisespinosa/openfoam:3.0.1 bash -c 'echo $WM_PROJECT_USER_DIR
 
 /home/ofuser/OpenFOAM/ofuser-3.0.1
 ```
-and
+,
 ```
 docker run --rm alexisespinosa/openfoam:3.0.1 bash -c 'echo $FOAM_RUN'
 
 /home/ofuser/OpenFOAM/ofuser-3.0.1/run
 ```
-You can also check $FOAM_USER_APPBIN and $FOAM_USER_LIBBIN.
+etc. You can also check $FOAM_USER_APPBIN and $FOAM_USER_LIBBIN.
 
 ### Mounting your a local-host directory to be understood as $WM_PROJECT_USER_DIR
 

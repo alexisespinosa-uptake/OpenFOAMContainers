@@ -41,6 +41,16 @@ RUN . ./bin/bashrc \
  &&  ./Allwmake 2>&1 | tee log.make \
  && printenv > "raw_waves2Foam.env"
 
+#............
+#Fixing the error of the 1808_PLUS folder
+RUN cp -r applications/solvers/solvers1712_PLUS  applications/solvers/solvers1806_PLUS \
+ && . ./bin/bashrc \
+ && cd applications/solvers/solvers1806_PLUS \
+ && cd waveFoam \
+ && wmake 2>&1 | tee log.make \
+ && cd ../porousWaveFoam \
+ && wmake 2>&1 | tee log.make
+ 
 #........
 #Fixing ownerships and permissions
 RUN chown -R ofuser:ofuser $WM_PROJECT_USER_DIR \

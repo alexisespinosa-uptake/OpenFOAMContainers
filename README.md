@@ -1,27 +1,34 @@
-This document is under development.
+(This document is under development.)
 
 ## OpenFOAM containers
-All the OpenFOAM folders in this repo have the Dockerfile used to create an image that will work in Pawsey supercomputers. The corresponding image would exist in the DockerHub repo for the account:
+All the OpenFOAM folders in this repo have the Dockerfile used to create an OpenFOAM container image that works properly in Pawsey supercomputers. The corresponding image would exist in the DockerHub repo account: **alexisespinosa**.
 
-```
-alexisespinosa
-```
-Therefore, for example, for pulling the openfoam:v1812 image, the docker command would be:
+There are for main directories in this repository:
+
+- latest
+- previous
+- very_old
+- on_development
+
+All of them contain folders that keep the Dockerfiles used to build the container specified by its name. All of them are functional, but the directory "latest" keeps what we consider the latest "Best Practise" up-to-date for the definition of a Dockefile. The other directories have Dockerfiles that have not been converted to the latest best practices, but which created functional containers. (These Dockerfiles and the corresponding containers will be updated to the latest best practices bit by bit). The folder "on_development" may contain non-finished work (if the container image does not exist in the DockerHub, then that means that the Dockerfile is still not functional).
+
+As mentioned above, the container images built from these Dockerfiles are archived in DockerHub. For example, the folder **openfoam-v1812** corresponds to the dockerHub image **alexisespinosa/openfoam:v1812**. And the command to pull the image from the DockerHub would be:
 
 ```shell
 localShell:$ theRepo=alexisespinosa
 localShell:$ theContainer=openfoam
-localShell:$ theTag=4.0
+localShell:$ theTag=v1812
 localShell:$ docker pull $theRepo/$theContainer:$theTag
 ```
+
 
 
 ## General Documentation
 Several instructions for the use of containers are available:
 
-* [01_RunningACaseWithDocker](./Documentation/ContainerUsage/01_RunningACaseWithDocker.md)
-* [02_RunningACaseAtPawseyWithShifter](./Documentation/ContainerUsage/02_RunningACaseAtPawseyWithShifter.md)
-* [03_CompilingYourOwnSolver](./Documentation/ContainerUsage/03_CompilingYourOwnSolver.md)(under development)
+* [1. Running a case with docker in your local host](./Documentation/ContainerUsage/01_RunningACaseWithDocker.md)
+* [2. Running a case at Pawsey with **shifter**](./Documentation/ContainerUsage/02_RunningACaseAtPawseyWithShifter.md)
+* [3. Compiling your own OpenFOAM solver](./Documentation/ContainerUsage/03_CompilingYourOwnSolver.md) (under development)
 
 
 Several instructions for the creation of containers are available:

@@ -1,0 +1,69 @@
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+# IV. COMPILING YOUR OWN SOLVER
+#
+#Example for compiling your own solver to be used with the foam-extend:4.0 container:
+
+# For using it in your local host with docker:
+# 1.0 Pull the container:
+#     1.1 docker pull alexisespinosa/foam-extend:4.0
+# 2.0 Run the container interactively:
+#     2.3 cd to your working directory in scratch:
+#         2.3.1  cd <workingDir> 
+#     2.5 (At pawsey computer): run interactively mounting your userfoam-extend directory in the place of $WM_PROJECT_USER_DIR:
+#         docker run -it --rm -v /Users/MyMac/foam-extend/espinosa-4.0:/home/ofuser/foam-extend/ofuser-4.0 alexisespinosa/foam-extend:4.0
+#         (This should prompt you into the container itself) 
+#     2.6 Within the container, cd to the application dir and compile (you can use the environmental variables):
+#         2.6.1 cd $WM_PROJECT_USER_DIR/applications/my_icoFoam
+#         2.6.2 wclean
+#         2.6.3 wmake
+#               (Now the executable of my_icoFoam should be visible in the container at):
+#               /home/ofuser/foam-extend/ofuser-4.0/platforms/linux64GccDPInt32Opt/bin/my_icoFoam
+#     1.1 (In the login node): sg $PAWSEY_PROJECT -c 'shifter pull alexisespinosa/foam-extend:4.0'
+# 2.0 Run the container interactively:
+#     2.1 (At pawsey computer):salloc -p debugq
+#     2.2 module load shifter
+#     2.3 (At pawsey computer): cd to your working directory in scratch:
+#         2.3.1  cd $MYSCRATCH/<workingDir> 
+#     2.4 scp your developed application into your userfoam-extend directory in $MYGROUP in Pawsey:
+#         2.4.1 (At your local host use scp):
+#               scp -r myLocalDir/foam-extend/espinosa-4.0/applications/my_icoFoam \
+#               espinosa@hpc-data.pawsey.org.au:/group/pawseyXXXX/espinosa/foam-extend/espinosa-4.0/applications 
+#     2.5 (At pawsey computer): run interactively mounting your userfoam-extend directory in the place of $WM_PROJECT_USER_DIR:
+#         shifter run --mount=type=bind,source=$MYGROUP/foam-extend/espinosa-4.0,destination=/home/ofuser/foam-extend/ofuser-4.0 alexisespinosa/foam-extend:4.0
+#         (This should prompt you into the container itself) 
+#     2.6 Within the container, cd to the application dir and compile (you can use the environmental variables):
+#         2.6.1 cd $WM_PROJECT_USER_DIR/applications/my_icoFoam
+#         2.6.2 wclean
+#         2.6.3 wmake
+#               (Now the executable of my_icoFoam should be visible in the container at):
+#               /home/ofuser/foam-extend/ofuser-4.0/platforms/linux64GccDPInt32Opt/bin/my_icoFoam
+#               (which is the same as):
+#               $WM_PROJECT_USER_DIR/platforms/linux64GccDPInt32Opt/bin/my_icoFoam
+#               (which is the same as, inside or outside the container):
+#               $MYSCRATCH/foam-extend/espinosa-4.0/platforms/linux64GccDPInt32Opt/bin/my_icoFoam
+#     2.7 Exit the interactive container
+
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+#Example script for running your own solver (created above) with foam-extend:4.0 container:
+#1. cd to the working dir (In this case, this working dir has the tutorial "cavity")
+#2. run the script: sbatch runContainer.slm
+#   2.1 The script contains: (What is in the script is after the mark ##|):
+##|#!/bin/bash -l
+##|#SBATCH --export=NONE
+##|#SBATCH --time=00:05:00
+##|#SBATCH --ntasks=1
+##|#SBATCH --ntasks-per-node=24
+##|#SBATCH --partition=debugq
+##|
+##|module load shifter
+##|#----------
+##|#Setting some preliminary environmental variables
+##|export OF_VERSION=4.0
+##|
+##|echo "Creating Mesh with blockMesh ..."
+##|srun --export=all -n 1 shifter run alexisespinosa/foam-extend:$OF_VERSION blockMesh
+##|echo "Running parallel solver ..."
+##|srun --export=all -n 1 shifter run --mount=type=bind,source=$MYGROUP/foam-extend/espinosa-4.0,destination=/home/ofuser/foam-extend/ofuser-4.0 alexisespinosa/foam-extend:$OF_VERSION my_icoFoam > logRun 2>&1

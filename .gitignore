@@ -1,2 +1,7 @@
 *.build
 .*.md
+.*.swp
+run
+platforms
+linux64GccDPInt64Opt
+wmake

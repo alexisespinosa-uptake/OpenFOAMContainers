@@ -1,7 +1,7 @@
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-#Initial main definition
+# Initial main definition
 FROM ubuntu:16.04
 LABEL maintainer="Alexis.Espinosa@pawsey.org.au"
 #foam-extend version to install
@@ -14,7 +14,7 @@ SHELL ["/bin/bash","-c"]
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-#Installation of mpich to work in Pawsey supercomputers
+# 0. Installation of mpich to work in Pawsey supercomputers
 
 #This section was copy-pasted from the mpi-base docker file in
 #https://github.com/Pawseyops/pawsey-dockerfiles/blob/master/mpi-base/Dockerfile
@@ -94,10 +94,10 @@ RUN groupadd -g 999 ofuser \
  && useradd -r -m -u 999 -g ofuser ofuser
 RUN echo "ofuser:${OFVERSION}" | chpasswd
 
-
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
+## I. INSTALLING OPENFOAM.
 #This section is for installing foam-extend
 #Will follow instructions from here:
 # https://openfoamwiki.net/index.php/Installation/Linux/foam-extend-$OFVERSION
@@ -307,7 +307,8 @@ RUN chmod -R 777 $OFINSTDIR
 #----------------------------:
 # i. Copy&Paste the list of environmental variables below this comment.
 #and before the ii. "Fixing" comment.
-#(Replace all the existing ENV settings already in this file):
+#IMPORTANT: In the first pass of creation of this container, all the ENV definitions should be removed or commented.
+#           Then, after defining the list of ENV variables that will be used here, you should copy and paste them below:
 #----------------------------:
 ENV BISON_DIR=/MySoftware/foam/foam-extend-4.0/ThirdParty/packages/bison-2.7/platforms/linux64GccDPOpt
 #WillBeDefinedAtTheEndDueToShifterFailure:ENV FOAM_APPBIN=/MySoftware/foam/foam-extend-4.0/applications/bin/linux64GccDPOpt
@@ -415,8 +416,11 @@ ENV WM_PROJECT_DIR=/MySoftware/foam/foam-extend-4.0
 #Writing the environment variables for the installation so far:
 RUN cd $WM_PROJECT_DIR \
  && printenv > environment_vars_defined.env
+
 #---------------------------------------------------------------
 #---------------------------------------------------------------
+#---------------------------------------------------------------
+# Final configurations
 #...........
 #Trick for making apt-get work again. This is very weird.
 #Following the solution proposed here:
@@ -429,9 +433,7 @@ RUN apt-get clean \
  && apt-get clean \
  && apt-get update
 
-#---------------------------------------------------------------
-#---------------------------------------------------------------
-#---------------------------------------------------------------
+#...........
 ## Starting as ofuser by default
 USER ofuser
 WORKDIR /home/ofuser

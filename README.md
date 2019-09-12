@@ -24,16 +24,33 @@ localShell:$ docker pull $theRepo/$theContainer:$theTag
 
 
 ## General Documentation
-Several instructions for the use of containers are available:
+Several instructions for the use of containers are available.
 
-* [1. Running a case with docker in your local host](./Documentation/ContainerUsage/01_RunningACaseWithDocker.md)
-* [2. Running a case at Pawsey with **shifter**](./Documentation/ContainerUsage/02_RunningACaseAtPawseyWithShifter.md)
-* [3. Compiling your own OpenFOAM solver](./Documentation/ContainerUsage/03_CompilingYourOwnSolver.md) (under development)
+### Basic OpenFOAM containers
 
+Running instructions
 
-Several instructions for the creation of containers are available:
+* [1. Running a case **at your local host** with **docker**](./Documentation/ContainerUsage/01_RunningACaseWithDocker.md)
+* [2. Running a case **at Pawsey** with **shifter**](./Documentation/ContainerUsage/02_RunningACaseAtPawseyWithShifter.md)
+
+Creation instructions:
 
 * [I. Create an openfoam container](./Documentation/ContainerCreation/I.CREATE_OPENFOAM_CONTAINER.md) (under development)
 * [II. Hardcoding environmental variables](./Documentation/ContainerCreation/II.HARDCODING_ENVIRONMENTAL_VARIABLES.md)
-* [III.Adding tools to a new Image](./Documentation/ContainerCreation/III.ADDING_TOOLS_TO_NEW_IMAGE.md)(under development)
+
+### OpenFOAM containers equipped with your own solver
+
+* [3. Compiling your own OpenFOAM solver](./Documentation/ContainerUsage/03_CompilingYourOwnSolver.md) (under development)
+
+### OpenFOAM containers equipped with additional tools
+
+Installing VTK, CFDEM and LIGGGTHS:
+
+* [III.Adding tools to a new Image](./Documentation/ContainerCreation/III.ADDING_TOOLS_TO_NEW_IMAGE.md)( under development)
+
+Installing waves2Foam:
+
+* [IV. Installing and testing waves2Foam](./Documentation/ContainerCreation/IV.ADDING_WAVES2FOAM.md) (under development) 
+
+### Some other comments
 * [Some other comments](./Documentation/ContainerCreation/GeneralComments.md) (under development)

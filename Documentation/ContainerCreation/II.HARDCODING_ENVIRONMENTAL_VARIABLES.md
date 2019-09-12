@@ -18,6 +18,7 @@ The specific steps to follow in this stage are:
 - 0.0 Comment or remove all the ENV lines immediately after the  the " i. Copy&Paste" indication within the Dockerfile.
 
 - 0.1 Define some useful variables for the naming of the container:
+
 ```shell
 localShell:$ theRepo=alexisespinosa
 localShell:$ theContainer=openfoam
@@ -31,7 +32,7 @@ localShell:$ theTag=4.0
 localShell:$ docker build -t $theRepo/$theContainer:$theTag .
 ```
 
-## 1. Print out a list of the environmental variables
+## 1. Test the container and the print out a list of the environmental variables
 
 - 1.1: Run an interactive session. For this, mount your current directory "$PWD" as "/localDir", and use your local "user:group" IDs in order to have writing permission to the local directory from inside the container:
 
@@ -45,7 +46,7 @@ I have no name!:$
 - 1.2 Within the interactive session, source the configuration file in order to define openfoam environmental variables:
 
 ```shell
-I have no name!:$ source /MySoftware/openfoam/openfoam-4.0/etc/bashrc
+I have no name!:$ source /MySoftware/OpenFOAM/OpenFOAM-4.0/etc/bashrc
 ```
 
 - 1.3 Find a tutorial case to test:
@@ -58,7 +59,7 @@ I have no name!:$ find $FOAM_TUTORIALS -type d -name "cavity"
 
 ```shell
 I have no name!:$ mkdir -p /localDir/run/tutorials
-I have no name!:$ cp -rp $FOAM_TUTORIALS/incompressible/icoFoam/cavity/cavity /localDir/run/tutorials/
+I have no name!:$ cp -rp $FOAM_TUTORIALS/incompressible/icoFoam/cavity/cavity /localDir/run/tutorials
 I have no name!:$ cd /localDir/run/tutorials/cavity
 I have no name!:$ blockMesh
 I have no name!:$ icoFoam
@@ -72,7 +73,7 @@ I have no name!:$ printenv > /localDir/variables/raw_vars.env
 I have no name!:$ exit
 ```
 
-## 2. Clean and edit the list and finally copy/paste it into the Dockerfile
+## 2. Clean and edit the list
 Here, we are going to edit the file containing the variables and finally copy paste the list into the Dockerfile.
 
 - 2.1 First, we are going to sort the list for makeing it easier to choose the variables we are interested on:
@@ -90,20 +91,29 @@ localShell:$ vi cleaned_vars.env
 ```
 Use the editor to delete all the lines not related to openfoam. The names of the variables to keep can be identified with:
 
-```
-Variables whose name is related directly to openfoam:
-FOAM_*, WM_*,
+Variables whose name is related directly to openfoam, like FOAM\_\*, WM\_\*.
 
-Variables related to the ThirdParty tools, like:
-BOOST_*, CGAL_*, FFTW_*, ParaView_*, PV_*, SCOTCH_*, BISON_*, HWLOC_*, MESQUITE_*, METIS_*, PARMETIS_*, PARMGRIDGEN_*, PYFOAM_*, 
+Variables related to compiler, mpi and paths: LD_LIBRARY_PATH, MPI\_\*, PATH.
+
+Variables related to the ThirdParty tools, like: BOOST\_\*, ParaView\_\*, etc.
+
+The full list in alphabetical order that we have identified so far is:
+
+```
+BISON_*, BOOST_*, CGAL_*,
+FFTW_*, FOAM_*, HWLOC_*,
+LD_LIBRARY_PATH,
+MESQUITE_*, METIS_*, MPI_*,
+PARMETIS_*, PARMGRIDGEN_*,
+PATH,
+ParaView_*, PV_*,
+PYFOAM_*, SCOTCH_*,
+WM_*
+```
 but may be others.
 
-Variables related to compiler, mpi and paths:
-LD_LIBRARY_PATH, MPI_*, PATH,
+And also double check for variables whose definition contain strings like "OpenFOAM", "foam", "ThirdParty":w, etc.
 
-And also check for variables whose definition contains OpenFOAM, foam, ThirdParty, etc.
-
-```
 Be careful and identify any other variable that may be related to your openfoam installation. If you miss any, you will notice it while finally using the container. Then you may need to come back to this point and keep that specific variable that may be missing.
 
 - 2.3 Copy the list into a ready_vars.env file, where the lines to be added to the Dockerfile will be put ready to be copied/pasted.
@@ -162,7 +172,8 @@ Copy the list into the right section of the Dockerfile, just below the " i. Copy
 #----------------------------:
 # i. Copy&Paste the list of environmental variables below this comment.
 #and before the ii. "Fixing" comment.
-#(Replace all the existing ENV settings already in this file):
+#IMPORTANT: In the first pass of creation of this container, all the ENV definitions should be removed or commented.
+#           Then, after defining the list of ENV variables that will be used here, you should copy and paste them below:
 #----------------------------:
 ENV FOAM_APP=/MySoftware/OpenFOAM/OpenFOAM-4.x/applications
 ENV FOAM_APPBIN=/MySoftware/OpenFOAM/OpenFOAM-4.x/platforms/linux64GccDPInt32Opt/bin
@@ -227,9 +238,9 @@ localShell:$ cd variables
 localShell:$ sort raw_docker.env -o sorted_docker.env
 localShell:$ diff sorted_vars.env sorted_docker.env
 ```
-(If you see any difference IN THE VARIABLES RELATED TO OPENFOAM, then adjust whatever is necessary in step "2" and proceed again.)
+(No differences should be seen IN THE VARIABLES RELATED TO OPENFOAM. If you see any difference, then adjust whatever is necessary in step "2" and proceed all over again.)
  
-## 6. Upload the container image to your docker repository
+## 6. Push the container image to your docker repository
 
 - 6.1 If everything is working and lists are consistent, then push the container to the repo:
 
@@ -237,7 +248,7 @@ localShell:$ diff sorted_vars.env sorted_docker.env
 localShell:$ docker push $theRepo/$theContainer:$theTag
 ```
 
-## 7. Download the container image into Pawsey
+## 7. Pull the container image down into Pawsey
 
 - 7.1 ssh to zeus or magnus:
 
@@ -256,52 +267,54 @@ user@zeus-1:~> sg $PAWSEY_PROJECT -c "shifter pull $theRepo/$theContainer:$theTa
 ```
 (For more info on how to pull images into our systems read the Pawsey Documentation.)
 
-## 8. Execute a basic test (display the help message of icoFoam):
-```shell
-user@zeus-1:~> shifter run $theRepo/$theContainer:$theTag icoFoam -help
-```
-(Note that shifter will not mount the /tmp directory of the container, so you may see a warning message about it, but that is fine.)
-You should have seen the help message correctly without errors. If errors occurred, it is possible that some environmental variables went missing. But even if this has worked, it is important that you go through the following steps to catch possible problems and finalise the creation of the container.
-
-## 9. VERY IMPORTANT: Confirm that variables are preserved by shifter
+## 8. VERY IMPORTANT: Confirm that variables are preserved by shifter
 For some weird reason, shifter may forget/loose some variables when running the image. If that happens, your solver may fail. (More info is in the helpdesk ticket: GS-10054). In order to workaround this bug, these variables need to be defined in different order within the initial Dockerfile and hope for shifter to be able to preserve them. So far, this has worked with all the containers we have created:
 
-- 9.1 Print the environmental variables that shifter recognises in the container:
+- 8.1 Print the environmental variables that shifter recognises in the container:
 
 ```shifter
 user@zeus-1:~> shifter run $theRepo/$theContainer:$theTag printenv > raw_shifter.env
 ```
-- 9.2 Now copy the file into your local system
+- 8.2 Now copy the file into your local system. From the local host:
 
 ```shell
 localShell:$ cd variables
 localShell:$ scp user@hpc-data.pawsey.org.au:raw_shifter.env .
 ```
+(IMPORTANT: remember to use your username instead of "user" above.)
+
 And sort the file and clean it ( as in section "2") in order to check the differences and identify the missing variables. Cleaning might be a bit more tedious, as the shifter list will contain a huge list of variables related to Pawsey systems. But, as indicated in section "2" the cleaned file should contain only the list of variables relevant to openfoam.
 
-- 9.3 Compare the two cleaned list of variables (then check the differences):
+- 8.3 Compare the two cleaned list of variables (then check the differences):
 
 ```shell
 localShell:$ diff cleaned_vars.env cleaned_shifter.env
 ```
-(If shifter was tested in zeus, you will find that BOOST_ROOT variable is different. This will not cause any problem. Openfoam will use the boost installation in zeus then.)
+(If shifter was tested in zeus, you will find that BOOST_ROOT variable is different. This will not cause any problem. The container will use the boost installation in zeus then.)
 	
 * Two things to check:
-	1.  The PATH variable will be different, but this should not be a problem. Just check that all the path definitions for the cleaned\_vars.env also exist within the path definition observed for the cleaned\_shifter.env file.
-	2. All the variables (like FOAM\_\*, WM\_\*, etc.) within the "cleaned\_vars.env" list SHOULD also exist within the "cleaned\_shifter.env" file and be identical. (Unfortunately, IT IS VERY POSSIBLE THAT SOME VARIABLES ARE INITIALLY LOST BY SHIFTER.)
+	1. All the variables (like FOAM\_\*, WM\_\*, etc.) within the "cleaned\_vars.env" list SHOULD also exist within the "cleaned\_shifter.env" file and be identical. (Unfortunately, IT IS VERY POSSIBLE THAT SOME VARIABLES ARE INITIALLY LOST BY SHIFTER.)
+	2. The PATH variable will be different, but this should not be a problem. Just check that all the path definitions for the cleaned\_vars.env also exist within the path definition observed for the cleaned\_shifter.env file.
 
-- 9.4 If variables are preserved, the container is ready to be tested with tutorials and production runs. If not, you will need to go to the next step to correct the Dockerfile and then back to the creation of the corrected container.
+- 8.4 If variables are preserved, the container is ready to be tested with tutorials and production runs. If not, you will need to go to the next step to correct the Dockerfile and then back to the creation of the corrected container.
 
-## 10. If differences between the cleaned list appear, then fix them and test again:
+## 9. If differences between the cleaned list appear, then fix them and test again
 If variables were lost after the check in previous step, then we need to correct the problem. For that:
 
-- 10.1 Comment the initial definition of the lost variables within the original list created inside the Dockerfile. (If you read another existing working Dockerfile, you may read examples of those variables commented with the tag "#WillBeDefinedAtTheEndDueToShifterFailure".)
-- 10.2 Now, define them as the last variables to be defined within the Dockerfile. Basically, cut the original lines and paste them below the section "ii. Fixing shifter bug.." like:
+- 9.1 Comment the initial definition of the lost variables within the original list created inside the Dockerfile. (If you read another existing working Dockerfile, you may read examples of those variables commented with the tag "#WillBeDefinedAtTheEndDueToShifterFailure".)
+- 9.2 Now, define them as the last variables to be defined within the Dockerfile. Basically, cut the original lines and paste them below the section "ii. Fixing shifter bug.." like:
 
 ```
 .
 .
 .
+#WillBeDefinedAtTheEndDueToShifterFailure:ENV WM_PROJECT_DIR=/MySoftware/OpenFOAM/OpenFOAM-4.0
+#WillBeDefinedAtTheEndDueToShifterFailure:ENV WM_PROJECT_INST_DIR=/MySoftware/OpenFOAM
+ENV WM_PROJECT=OpenFOAM
+ENV WM_PROJECT_USER_DIR=/home/ofuser/OpenFOAM/ofuser-4.0
+ENV WM_PROJECT_VERSION=4.0
+ENV WM_THIRD_PARTY_DIR=/MySoftware/OpenFOAM/ThirdParty-4.0
+
 #----------------------------:
 #ii. Fixing shifter bug with environment variables.
 #If loss of variables environment variables occurred to you,
@@ -312,13 +325,23 @@ ENV FOAM_APPBIN=/MySoftware/OpenFOAM/OpenFOAM-4.0/applications/bin/linux64GccDPO
 ENV FOAM_LIBBIN=/MySoftware/OpenFOAM/OpenFOAM-4.0/lib/linux64GccDPOpt
 ENV WM_COMPILER_ARCH=
 ENV WM_CXXFLAGS="-m64 -fPIC -std=c++0x"
+ENV WM_PROJECT_INST_DIR=/MySoftware/OpenFOAM
 ENV WM_PROJECT_DIR=/MySoftware/OpenFOAM/OpenFOAM-4.0
 .
 .
 .
 ```
 
-- 10.3 Repeat the whole process from the step "4. Test if the container works with the defined variables", until you succeed without losing any variable after the check in step "9".
+- 9.3 Repeat the whole process from the step **"Test if the container works ..."** above until you succeed without losing any variable after the check in step **"Confirm if variables are preserved ..."**. Then you can proceed to final basic step (below) and then usage of the container.
+
+## 10. Execute a basic test (display the help message of icoFoam):
+```shell
+user@zeus-1:~> shifter run $theRepo/$theContainer:$theTag icoFoam -help
+```
+(Note that shifter will not mount the /tmp directory of the container, so you may see a warning message about it, but that is fine.)
+You should have seen the help message correctly without errors. If errors occurred, it is possible that some environmental variables went missing. Proceed from step "8" above.
+
+If everything goes fine, then you can use the container at Pawsey. Follow the instructions of: [Running a case **at Pawsey** with **shifter**](../ContainerUsage/02_RunningACaseAtPawseyWithShifter.md)
 
 ---
 Back to the [README](../../README.md)

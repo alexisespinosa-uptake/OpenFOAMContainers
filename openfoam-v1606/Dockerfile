@@ -150,9 +150,9 @@ RUN apt-get update -qq\
 ARG OFVERSIONFORGE=v1606%2B
 WORKDIR $OFINSTDIR
 RUN wget --no-check-certificate -O OpenFOAM-${OFVERSION}.tgz \
-    "http://downloads.sourceforge.net/openfoamplus/files/OpenFOAM-v1606%2B.tgz?use_mirror=mesh" \
+    "http://downloads.sourceforge.net/openfoamplus/files/OpenFOAM-${OFVERSIONFORGE}.tgz?use_mirror=mesh" \
  && wget --no-check-certificate -O ThirdParty-${OFVERSION}.tgz \
-    "http://downloads.sourceforge.net/openfoamplus/files/ThirdParty-v1606%2B.tgz?use_mirror=mesh" \
+    "http://downloads.sourceforge.net/openfoamplus/files/ThirdParty-${OFVERSIONFORGE}.tgz?use_mirror=mesh" \
  && tar -xvzf OpenFOAM-${OFVERSION}.tgz \
  && tar -xvzf ThirdParty-${OFVERSION}.tgz \
  && rm -f OpenFOAM-${OFVERSION}.tgz \

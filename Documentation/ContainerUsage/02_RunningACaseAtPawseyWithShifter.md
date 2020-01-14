@@ -76,6 +76,7 @@ srun --export=all -n 1 -N 1 shifter run $theRepo/$theContainer:$theTag decompose
 ~~~
 * (**module load shifter** Shifter module needs to be loaded)
 * (**--export=NONE**, **--export=all** sequence: The first one guarantees a clean environment for the script, the second one guarantees that all the settings within the script [environmental variables set here and within the modules] will be recognised inside the different job steps called by srun.)
+* (All these tools are being executed in a single core, as all these OpenFOAM tools are serial. But the solver needs to be executed with the **--mpi** option of shifter. Read some paragraphs below)
 
 
 * And submit the job

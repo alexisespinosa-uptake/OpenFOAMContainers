@@ -1,7 +1,7 @@
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-#Initial main definintion
+# Initial main definintion
 FROM ubuntu:18.04
 LABEL maintainer="Alexis.Espinosa@pawsey.org.au"
 #OpenFOAM version to install
@@ -14,7 +14,7 @@ SHELL ["/bin/bash","-c"]
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-#Installation of mpich to work in Pawsey supercomputers
+# 0. Installation of mpich to work in Pawsey supercomputers
 
 #This section was copy-pasted from the mpi-base docker file in
 #https://github.com/Pawseyops/pawsey-dockerfiles/blob/master/mpi-base/Dockerfile
@@ -98,6 +98,7 @@ RUN echo "ofuser:${OFVERSION}" | chpasswd
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
+## I. INSTALLING OPENFOAM.
 #This section is for installing OpenFOAM
 #Will follow instructions from here:
 # https://openfoamwiki.net/index.php/Installation/Linux/OpenFOAM-$OFVERSION/Ubuntu
@@ -171,20 +172,20 @@ RUN wget --no-check-certificate -O OpenFOAM-${OFVERSION}.tgz \
 #AEG:Not defining the recommended softlinks to mpicc.openmpi and mpirun.openmpi in step 6 of the instructions
 
 #...........
+#Step X. Definitions for the prefs and bashrc files.
+ARG OFPREFS=${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/prefs.sh
+ARG OFBASHRC=${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/bashrc
+RUN head -23 ${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh > $OFPREFS \
+ && echo '#------------------------------------------------------------------------------' >> ${OFPREFS}
+
+#...........
 #Step Additional.
 #Using a combination of the variable definition recommended for the use of system mpich here:
 #https://bugs.openfoam.org/view.php?id=1167
 #And in the file .../OpenFOAM-v1812/wmake/rules/General/mplibMPICH
 #(These MPI_* environmental variables are set in the prefs.sh as suggested in the link above,
 # and this file is sourced automatically by the bashrc when the bashrc is sourced)
-ARG OFPREFS=${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/prefs.sh
-ARG OFBASHRC=${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/bashrc
-RUN cp ${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh $OFPREFS \
- && sed -i $'s@^export WM_COMPILER_TYPE=ThirdParty@# export WM_COMPILER_TYPE=ThirdParty@' ${OFPREFS} \
- && sed -i $'s@^export WM_COMPILER=Clang@# export WM_COMPILER=Clang@' ${OFPREFS} \
- && sed -i $'s@^export WM_MPLIB=SYSTEMOPENMPI@# export WM_MPLIB=SYSTEMOPENMPI@' ${OFPREFS} \
- && echo '#------------------------------------------------------------------------------' >> ${OFPREFS} \
- && echo 'export WM_MPLIB=SYSTEMMPI' >> ${OFPREFS} \
+RUN echo 'export WM_MPLIB=SYSTEMMPI' >> ${OFPREFS} \
  && echo 'export MPI_ROOT="/usr"' >> ${OFPREFS} \
  && echo 'export MPI_ARCH_FLAGS="-DMPICH_SKIP_MPICXX"' >> ${OFPREFS} \
 ##AEG:Gcc7 has problems with the -isystem flag. I'm commenting the original approach
@@ -199,16 +200,18 @@ RUN cp ${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh $OFPREF
 #...........
 #Step Additional
 #Changing the installation directory within the bashrc file (This is not in the openfoamwiki instructions)
-RUN sed -i $'s@^projectDir="$HOME/OpenFOAM/OpenFOAM-$WM_PROJECT_VERSION"@# projectDir="$HOME/OpenFOAM/OpenFOAM-$WM_PROJECT_VERSION"\\\nprojectDir='"${OFINSTDIR}"'@' ${OFBASHRC} \
+RUN sed -i -e '/^projectDir="$HOME.*/aprojectDir="'"${OFINSTDIR}"'/OpenFOAM-$WM_PROJECT_VERSION"' ${OFBASHRC} \
+ && sed -i -e '0,/^projectDir="$HOME/s//# projectDir="$HOME/' ${OFBASHRC} \
+#"
 #Changing the WM_PROJECT_USER_DIR directory within the bashrc file 
 #IMPORTANT:You have two options:
 #   1. You can mount a directory of your local-host into this directory (as explained at the end of the Dockerfile)
 #   2. Or you can include and build stuff inside the container and save it as your own image for later use.
- && sed -i $'s@^export WM_PROJECT_USER_DIR="$HOME/$WM_PROJECT/$USER-$WM_PROJECT_VERSION"@#export WM_PROJECT_USER_DIR="$HOME/$WM_PROJECT/$USER-$WM_PROJECT_VERSION"\\\nexport WM_PROJECT_USER_DIR="'"${OFUSERDIR}/ofuser"'-$WM_PROJECT_VERSION"@' ${OFBASHRC}
-
+ && sed -i -e '/^export WM_PROJECT_USER_DIR=.*/aexport WM_PROJECT_USER_DIR="'"${OFUSERDIR}/ofuser"'-$WM_PROJECT_VERSION"' ${OFBASHRC} \
+ && sed -i -e '0,/^export WM_PROJECT_USER_DIR/s//# export WM_PROJECT_USER_DIR/' ${OFBASHRC}
+#"
 #...........
-#Step 8. From openfoamwiki instructions (modified: adding the WM_LABEL_SIZE into the prefs.sh file)
-#AEG. Commenting for using the default WM_LABEL_SIZE=32:RUN echo 'export WM_LABEL_SIZE=64' >> ${OFPREFS}
+#Step 8. From openfoamwiki instructions
 
 #...........
 #Step 9. From openfoamwiki instructions
@@ -219,7 +222,7 @@ RUN sed -i $'s@^projectDir="$HOME/OpenFOAM/OpenFOAM-$WM_PROJECT_VERSION"@# proje
 #AEG: Comment one option or the other (Paraview or VTK). Smaller containers are generated without paraview,
 #     but catalyst will not be available with it.
 
-#-#UsingVTKInstead#-#:##Paraview compilation (used for runTimePostprocessing and catalyst module)
+##Paraview compilation (used for runTimePostprocessing and catalyst module)
 #-#UsingVTKInstead#-#:RUN . ${OFBASHRC} \
 #-#UsingVTKInstead#-#: && cd $WM_THIRD_PARTY_DIR \
 #-#UsingVTKInstead#-#: && export QT_SELECT=qt5 \
@@ -290,19 +293,6 @@ USER root
 #Allowing normal users to read,write and execute on the OF installation
 RUN chmod -R 777 $OFINSTDIR
 
-#...........
-# Automating the sourcing of the openfoam prefs.sh and bashrc files for root and ofuser
-#(Now Commented because, for the current version of shifter the environmental variables will need to be set
-# manually with ENV commands. And, in order to check that the set up of all necessary variables is done
-# properly, I will avoid the setting through the use of prefs.sh and bashrc files, and will use only the ENV
-# declarations that will appear in the final section below) 
-####RUN echo "" >> $HOME/.bashrc \
-#### && echo "#Sourcing openfoam setting files" >> $HOME/.bashrc \
-#### && echo "source ${OFBASHRC}" >> ${HOME}/.bashrc \
-#### && echo "" >> /home/ofuser/.bashrc \
-#### && echo "#Sourcing openfoam setting files" >> /home/ofuser/.bashrc \
-#### && echo "source ${OFBASHRC}" >> /home/ofuser/.bashrc
-
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
@@ -312,7 +302,8 @@ RUN chmod -R 777 $OFINSTDIR
 #----------------------------:
 # i. Copy&Paste the list of environmental variables below this comment.
 #and before the ii. "Fixing" comment.
-#(Replace all the existing ENV settings already in this file):
+#IMPORTANT: In the first pass of creation of this container, all the ENV definitions should be removed or commented.
+#           Then, after defining the list of ENV variables that will be used here, you should copy and paste them below:
 #----------------------------:
 ENV BOOST_ARCH_PATH=/MySoftware/OpenFOAM/ThirdParty-v1812/platforms/linux64Gcc/boost_1_64_0
 ENV CGAL_ARCH_PATH=/MySoftware/OpenFOAM/ThirdParty-v1812/platforms/linux64Gcc/CGAL-4.9.1
@@ -380,8 +371,11 @@ ENV WM_PROJECT_API=1812
 #Writing the environment variables for the installation so far:
 RUN cd $WM_PROJECT_DIR \
  && printenv > environment_vars_defined.env
+
 #---------------------------------------------------------------
 #---------------------------------------------------------------
+#---------------------------------------------------------------
+# Final configurations
 #...........
 #Trick for making apt-get work again. This is very weird.
 #Following the solution proposed here:
@@ -394,9 +388,7 @@ RUN apt-get clean \
  && apt-get clean \
  && apt-get update
 
-#---------------------------------------------------------------
-#---------------------------------------------------------------
-#---------------------------------------------------------------
+#...........
 ## Starting as ofuser by default
 USER ofuser
 WORKDIR /home/ofuser

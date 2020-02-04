@@ -1,0 +1,40 @@
+5c5
+< FROM alexisespinosa/openfoam:v1606
+---
+> FROM alexisespinosa/openfoam:v1806
+8c8
+< ARG OFVERSION="v1606+"
+---
+> ARG OFVERSION="v1806"
+48,49c48,49
+< #-#NotNeededFor1606#-#:#Fixing the error of the 1808_PLUS folder (by copying the 1712 version into a 1806 version without modification)
+< #-#NotNeededFor1606#-#:RUN cp -r applications/solvers/solvers1712_PLUS  applications/solvers/solvers1806_PLUS
+---
+> #Fixing the error of the 1808_PLUS folder (by copying the 1712 version into a 1806 version without modification)
+> RUN cp -r applications/solvers/solvers1712_PLUS  applications/solvers/solvers1806_PLUS
+54,60c54
+<  && cd ${W2FINSTDIR} \
+<  && ./Allwmake 2>&1 | tee log.make 
+< 
+< #............
+< #Compiling  all waves2Foam
+< RUN . ${W2FBASHRC} \
+<  && cd ${W2FINSTDIR} \
+---
+>  &&  ./Allwmake 2>&1 | tee log.make \
+100c94
+< ENV WAVES_APPBIN=/home/ofuser/OpenFOAM/ofuser-v1606+/platforms/linux64GccDPInt32Opt/bin
+---
+> ENV WAVES_APPBIN=/home/ofuser/OpenFOAM/ofuser-v1806/platforms/linux64GccDPInt64Opt/bin
+104c98
+< ENV WAVES_LIBBIN=/home/ofuser/OpenFOAM/ofuser-v1606+/platforms/linux64GccDPInt32Opt/lib
+---
+> ENV WAVES_LIBBIN=/home/ofuser/OpenFOAM/ofuser-v1806/platforms/linux64GccDPInt64Opt/lib
+107c101
+< ENV WAVES_SOL=/MySoftware/waves2Foam/applications/solvers/solvers1606_PLUS
+---
+> ENV WAVES_SOL=/MySoftware/waves2Foam/applications/solvers/solvers1806_PLUS
+112c106
+< ENV WM_PROJECT_VERSION_NUMBER=1606
+---
+> ENV WM_PROJECT_VERSION_NUMBER=1806

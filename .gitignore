@@ -1,4 +1,4 @@
-*.build
+log*build*
 .*.md
 .*.swp
 run

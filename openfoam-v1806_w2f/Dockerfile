@@ -32,25 +32,28 @@ RUN printenv > "raw_${OFVERSION}.env"
 
 #............
 #Modifying the bashrc of waves2Foam
-RUN cp ./bin/bashrc.org ./bin/bashrc \
- &&  sed -i 's@WAVES_DIR=.*@WAVES_DIR='"${W2FINSTDIR}"'@'  ./bin/bashrc
+ARG W2FBASHRC=${W2FINSTDIR}/bin/bashrc
+RUN cp ${W2FBASHRC}.org ${W2FBASHRC} \
+ &&  sed -i -e '/^export WAVES_DIR=.*/aexport WAVES_DIR='"${W2FINSTDIR}" ${W2FBASHRC} \
+ &&  sed -i -e '0,/^export WAVES_DIR/s//# export WAVES_DIR/' ${W2FBASHRC}
 
 #............
-#Compiling waves2Foam
-RUN . ./bin/bashrc \
+#Modifying the prepareCase.sh script for the tutorials to work from outisde the tutorial directory (if replicated)
+RUN . ${W2FBASHRC} \
+ && cp $WAVES_DIR/bin/prepareCase.sh $WAVES_DIR/bin/prepareCase.sh.org \
+ && sed -i -e 's,../../commonFiles,$WAVES_TUT/commonFiles,g' $WAVES_DIR/bin/prepareCase.sh \
+ && sed -i -e 's,$PWD/../../..,$WAVES_DIR,g' $WAVES_DIR/bin/prepareCase.sh
+
+#............
+#Fixing the error of the 1808_PLUS folder (by copying the 1712 version into a 1806 version without modification)
+RUN cp -r applications/solvers/solvers1712_PLUS  applications/solvers/solvers1806_PLUS
+ 
+#............
+#Compiling  all waves2Foam
+RUN . ${W2FBASHRC} \
  &&  ./Allwmake 2>&1 | tee log.make \
  && printenv > "raw_waves2Foam.env"
 
-#............
-#Fixing the error of the 1808_PLUS folder
-RUN cp -r applications/solvers/solvers1712_PLUS  applications/solvers/solvers1806_PLUS \
- && . ./bin/bashrc \
- && cd applications/solvers/solvers1806_PLUS \
- && cd waveFoam \
- && wmake 2>&1 | tee log.make \
- && cd ../porousWaveFoam \
- && wmake 2>&1 | tee log.make
- 
 #........
 #Fixing ownerships and permissions
 RUN chown -R ofuser:ofuser $WM_PROJECT_USER_DIR \
@@ -63,13 +66,15 @@ RUN chmod -R 777 $W2FINSTDIR
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-## I. HARDCODING THE ENVIRONMENTAL VARIABLES TO RUN WAVES2FOAM
+## II. HARDCODING THE ENVIRONMENTAL VARIABLES TO RUN OPENFOAM.
 #
-# Full instructions about this hardcoding are in the Dockerfile for building the pure openfoam:v1812 container.
+# Please follow the relevant document inside ../Documentation/ContainerCreation
 #
-# The procedure that has been executed for OpenFOAM needs to be repeated.
-# But, in this case, the image to be used is alexisespinosa/openfoam:v1812_w2f
-# and the configuration file to be sourced is /MySoftware/waves2Foam/bin/bashrc
+# The procedure that has been executed for the plain OpenFOAM container needs to be repeated.
+# But, in this case, the image to be used is the one with waves2foam:
+# alexisespinosa/openfoam:v1806_w2f
+# and the configuration file to be sourced to add the waves2foam variables is:
+# /MySoftware/waves2Foam/bin/bashrc
 #
 # To identify the variables to be added, a diff with the original variables list can be made
 #
@@ -78,9 +83,10 @@ RUN chmod -R 777 $W2FINSTDIR
 # (Be careful and do not miss the FOAMEXTENDEDPROJECT variable becase this is an additional FOAM* var)
 # (Be careful and do not miss the WM_PROJECT_VERSION_NUMBER variable becase this is an additional WM_* var)
 #----------------------------:
-#I. 4.3 Copy&Paste the list of environmental variables below this comment.
-#and before the II. 4.2 comment.
-#(Substitute any existing ENV settings already in this file):
+# i. Copy&Paste the list of environmental variables below this comment.
+#and before the ii. "Fixing" comment.
+#IMPORTANT: In the first pass of creation of this container, all the ENV definitions should be removed or commented.
+#           Then, after defining the list of ENV variables that will be used here, you should copy and paste them below:
 #----------------------------:
 ENV EXTBRANCH=0
 ENV FOAMEXTENDPROJECT=0
@@ -100,9 +106,9 @@ ENV WAVES_XVERSION=0
 ENV WM_PROJECT_VERSION_NUMBER=1806
 
 #----------------------------:
-#II. 4.2 Fixing shifter failure.
-#If loss of variables happened,
-#Comment the problematic variables above and mark them with the tag #WillBeDefinedAtTheEndDueToShifterFailure
+#ii. Fixing shifter bug with environment variables.
+#If loss of variables environment variables occurred to you,
+#Comment the problematic variables in the list above and mark them with some tag like #WillBeDefinedAtTheEndDueToShifterFailure
 #and define them at the end of the list (immediately below this comment)
 #----------------------------:
 
@@ -115,6 +121,7 @@ RUN cd $WM_PROJECT_DIR \
 #---------------------------------------------------------------
 #---------------------------------------------------------------
 #---------------------------------------------------------------
+# Final configurations
 #...........
 #Trick for making apt-get work again. This is very weird.
 #Following the solution proposed here:
@@ -127,19 +134,7 @@ RUN apt-get clean \
  && apt-get clean \
  && apt-get update
 
-#---------------------------------------------------------------
-#---------------------------------------------------------------
-#---------------------------------------------------------------
+#...........
 ## Starting as ofuser by default
 USER ofuser
 WORKDIR /home/ofuser
-
-#---------------------------------------------------------------
-#---------------------------------------------------------------
-#---------------------------------------------------------------
-## II. TESTING AT PAWSEY
-#
-# Full instructions about this hardcoding are in the Dockerfile for building the pure openfoam:v1812 container.
-#
-# The procedure that has been executed for OpenFOAM needs to be repeated taking into account the
-# new environmental variables defined for waves2Foam

@@ -202,14 +202,14 @@ RUN echo 'export WM_MPLIB=SYSTEMMPI' >> ${OFPREFS} \
 #Changing the installation directory within the bashrc file (This is not in the openfoamwiki instructions)
 RUN sed -i -e '/^projectDir="$HOME.*/aprojectDir="'"${OFINSTDIR}"'/OpenFOAM-$WM_PROJECT_VERSION"' ${OFBASHRC} \
  && sed -i -e '0,/^projectDir="$HOME/s//# projectDir="$HOME/' ${OFBASHRC} \
-#"
+#" (This comment line is needed to let vi to show the right syntax)
 #Changing the WM_PROJECT_USER_DIR directory within the bashrc file 
 #IMPORTANT:You have two options:
 #   1. You can mount a directory of your local-host into this directory (as explained at the end of the Dockerfile)
 #   2. Or you can include and build stuff inside the container and save it as your own image for later use.
  && sed -i -e '/^export WM_PROJECT_USER_DIR=.*/aexport WM_PROJECT_USER_DIR="'"${OFUSERDIR}/ofuser"'-$WM_PROJECT_VERSION"' ${OFBASHRC} \
  && sed -i -e '0,/^export WM_PROJECT_USER_DIR/s//# export WM_PROJECT_USER_DIR/' ${OFBASHRC}
-#"
+#" (This comment line is needed to let vi to show the right syntax)
 #...........
 #Step 8. From openfoamwiki instructions
 

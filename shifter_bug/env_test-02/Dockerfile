@@ -1,4 +1,0 @@
-FROM ubuntu:16.04
-
-ENV WM_PROJECT=OpenFOAM
-ENV WM_PROJECT_DIR=/software/OpenFOAM/OpenFOAM-3.0.1

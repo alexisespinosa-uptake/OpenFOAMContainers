@@ -2,6 +2,12 @@
 
 # General Documentation
 
+Here we provide some examples of how to build OpenFOAM containers that have been tested to run properly in Pawsey Supercomputers. Users are encouraged to use this document and the examples provided as a guide for building their own OpenFOAM containers.
+
+In the directory "basicInstallations" examples of the Docker and Singularity definition files for building plain OpenFOAM containers are provided.
+
+In the directory "installationsWithAdditionalTools" examples of the Docker and Singularity definition files for building OpenFOAM containers with additional tools are provided.
+
 ## Use of OpenFOAM containers at Pawsey's supercomputers
 Installations of OpenFOAM are not easy to perform in supercomputers. There are always some details to be fixed/replaced from the typical installation instructions. Therefore, if the OpenFOAM version that you need is not available in our supercomputers, we strongly recommend to use an container with OpenFOAM on it.
 

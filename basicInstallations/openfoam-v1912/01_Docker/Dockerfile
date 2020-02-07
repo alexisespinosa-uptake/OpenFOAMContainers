@@ -270,7 +270,7 @@ RUN sed -i '/^projectDir="$HOME.*/aprojectDir="'"${OFINSTDIR}"'/OpenFOAM-$WM_PRO
 ##-##: && cd $WM_THIRD_PARTY_DIR \
 ##-##: && ./makeParaView | tee log.makePV
 
-##Paraview compilation (Adapted alternative instructions from OpenFoamWiki)(not working for me yet, may need many adaptations as for VTK above)
+##Paraview compilation (Adapted alternative instructions from OpenFoamWiki)
 RUN . ${OFBASHRC} \
 #AEG: recomendation in the ThirdParty-xx/README.md:
  && $WM_PROJECT_DIR/wmake/src/Allmake \

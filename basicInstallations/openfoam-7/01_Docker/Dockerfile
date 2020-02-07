@@ -237,11 +237,12 @@ ARG BASHRC_OPTIONS="FOAMY_HEX_MESH=yes"
 
 #AEG: foundation source files do not count with makeVTK script
 
-##Paraview compilation (Using instructions from the wiki + wget of ParaView because automatic download with curl is failing)
-#(Paraview download address pasted from ThirdParty-7/README.org)
+##Paraview compilation (Using instructions from the wiki)
 RUN . ${OFBASHRC} ${BASHRC_OPTIONS} \
  && cd $WM_THIRD_PARTY_DIR \
  && export QT_SELECT=qt5 \
+#downloading ParaView with wget because the supposedly automatic download with curl is failing
+#(Paraview download address pasted from ThirdParty-<Version>/README.org)
  && wget --no-check-certificate http://www.paraview.org/files/v5.6/ParaView-v5.6.0.tar.gz \
  && tar xvf ParaView-v5.6.0.tar.gz \
  && rm ParaView-v5.6.0.tar.gz \

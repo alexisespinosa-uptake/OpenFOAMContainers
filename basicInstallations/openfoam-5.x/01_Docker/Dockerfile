@@ -210,10 +210,16 @@ ARG BASHRC_OPTIONS="FOAMY_HEX_MESH=yes"
 
 #...........
 #Step 4.
-##Paraview compilation (for runtime postprocessing purposes)
+##Paraview compilation (Using instructions from the wiki)
 RUN . ${OFBASHRC} ${BASHRC_OPTIONS} \
  && cd $WM_THIRD_PARTY_DIR \
  && export QT_SELECT=qt4 \
+#downloading ParaView with wget because the supposedly automatic download with curl is failing
+#(Paraview download address pasted from ThirdParty-<Version>/README.org)
+ && wget --no-check-certificate http://www.paraview.org/files/v5.4/ParaView-v5.4.0.tar.gz \
+ && tar xvf ParaView-v5.4.0.tar.gz \
+ && rm ParaView-v5.4.0.tar.gz \
+ && mv ParaView-v5.4.0 ParaView-5.4.0 \
  && ./makeParaView -python -mpi -python-lib /usr/lib/x86_64-linux-gnu/libpython2.7.so.1.0 2>&1 | tee log.makePV
 
 #...........

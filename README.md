@@ -19,52 +19,27 @@ On the other hand, the preferred container manager for Pawsey supercomputers is 
 
 Here we describe each of the steps needed for the creation/use of OpenFOAM containers at Pawsey:
 
-* [I. First, create a MPICH-OpenFOAM container with Docker](./Documentation/ContainerCreation/I.CREATE_MPICH_OPENFOAM_CONTAINER_DOCKER.md)
-* [II. Then, port your Docker container into Singularity and copy it into Pawsey](./Documentation/ContainerCreation/II.PORT_DOCKER_CONTAINER_TO_SINGULARITY.md)
+* [I. First, create a MPICH-OpenFOAM container with Docker](./Documentation/Creation/CREATE_MPICH_OPENFOAM_CONTAINER_DOCKER.md)
+* [II. Then, port your Docker container into Singularity and copy it into Pawsey](./Documentation/Creation/PORT_DOCKER_CONTAINER_TO_SINGULARITY.md)
+* [III. Pull Pawsey's containers](./Documentation/Creation/PULL_PAWSEY_CONTAINERS.md) (under development)
+* [IV. Compiling your own OpenFOAM solver](./Documentation/Creation/COMPILING_YOUR_OWN_SOLVER.md) (under development, may be very out of date)
+* [V. Adding tools (like CFDEM-LIGGHTS or waves2FOAM) and produce a new container](./Documentation/Creation/ADDING_TOOLS_TO_NEW_IMAGE.md) (under development, may be very out of date)
+
 
 ### Running instructions
 
-* [1. Running a case **at your local linux host (or Nimbus)** with **docker**](./Documentation/ContainerUsage/01_RunningACaseWithDocker.md)
-* [2. Running a case **at Pawsey supercomputers** with **singularity**](./Documentation/ContainerUsage/02_RunningACaseAtPawseyWithSingularity.md)
-* [3. (Running a case **at Pawsey** with **shifter**) (Old documentation, not maintained anymore)](./Documentation/ContainerUsage/03_RunningACaseAtPawseyWithShifter.md)
+* [IV. Running a case **at your local linux host** with **Docker**](./Documentation/Usage/RunningLocalWithDocker.md) (under development)
+* [V. Running a case **at your local linux host** with **Singularity**](./Documentation/Usage/RunningLocalWithSingularity.md)  (under development)
+* [VI. Running a case **at Pawsey Supercomputers** with **Singularity**](./Documentation/Usage/RunningAtPawseyWithSingularity.md)  (under development)
+* [VII. Running a case **at Pawsey Nimbus cloud service**](./Documentation/Usage/RunningAtNimbus.md) (under development)
+* [(VIII.)(Additional) Comparing performance of Docker, Singularity and Singularity-Hybrid](./Documentation/Usage/ComparingPerformance.md) (under development)
 
-### OpenFOAM containers equipped with your own solver
-
-* [4. Compiling your own OpenFOAM solver](./Documentation/ContainerUsage/04_CompilingYourOwnSolver.md) (under development)
-
-### OpenFOAM containers equipped with additional tools
-
-Installing VTK, CFDEM and LIGGGTHS:
-
-* [III.Adding tools to a new Image](./Documentation/ContainerCreation/III.ADDING_TOOLS_TO_NEW_IMAGE.md)( under development)
-
-Installing waves2Foam:
-
-* [IV. Installing and testing waves2Foam](./Documentation/ContainerCreation/IV.ADDING_WAVES2FOAM.md) (under development) 
 
 ### Some other comments
-* [Some other comments](./Documentation/ContainerCreation/GeneralComments.md) (under development)
+* [Some other comments](./Documentation/Creation/GeneralComments.md)
 
-## OpenFOAM containers
-All the OpenFOAM subdirectories at the root of this repository have a Dockerfile used to create an OpenFOAM container image that works properly in Pawsey supercomputers. The corresponding image would exist in the DockerHub repo account: **alexisespinosa**.
-
-As mentioned above, the container images built from these Dockerfiles are archived in DockerHub. For example, the folder **openfoam-v1812** corresponds to the dockerHub image **alexisespinosa/openfoam:v1812**. And the command to pull the image from the DockerHub would be:
-
-```shell
-localShell:$ theRepo=alexisespinosa
-localShell:$ theContainer=openfoam
-localShell:$ theTag=v1812
-localShell:$ docker pull $theRepo/$theContainer:$theTag
-```
-
-There are some other subdirectories in this repository:
-
-- very_old
-- on_development
-
-The folder "on_development" may contain non-finished work (if the container image does not exist in the DockerHub, then that means that the Dockerfile is still not functional).
 
 ## Use of OpenFOAM containers at Nimbus (Pawsey's cloud)
-OpenFOAM is much more easier to install in a linux Nimbus virtual machine than it is in a supercomputer. Therefore, installing your own version of OpenFOAM is a non-complicated task. Nevertheless, users may already count with a working OpenFOAM container. For example, users may already count with an OpenFOAM container with MPICH that was prepared to run at Pawsey's supercomputers (as described above). Or even may want to run the native OpenFOAM developers' Docker containers with OpenMPI. All these three options are possible at Nimbus, but here we only describe the last two.
+OpenFOAM is much more easier to install in a linux Nimbus virtual machine than it is in a supercomputer. Therefore, installing your own version of OpenFOAM in Nimbus is a non-complicated task. Nevertheless, users may already count with an OpenFOAM container that works fine on Pawsey's Supercomputers (as most of this documentation talks about). Or even may want to run the native OpenFOAM developers' Docker containers as provided. All these three options are possible at Nimbus, but here we only describe the last two.
 
 

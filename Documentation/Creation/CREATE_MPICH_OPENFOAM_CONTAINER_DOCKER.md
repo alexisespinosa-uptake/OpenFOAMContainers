@@ -96,7 +96,7 @@ Note that for using OpenFOAM environment, we still need to source the "/opt/Open
 
 Be aware that after exiting the container, all the results are lost. This is not a problem here as we were just testing the correct execution of the pimpleFoam solver and other tools needed for the "channel395" case.
 
-Several other ways of launching an interactive session are available (specially the use of mounting of directories of the localHost in order to be able to write the results to the disk of the localHost). For understanding different options for running Docker containers we recommend the user to check the official Docker documentation: [Docker run reference](https://docs.docker.com/engine/reference/run/)
+Several other ways of launching an interactive session are available (specially the use of mounting of directories of the localHost in order to be able to write the results to the disk of the localHost). For understanding different options for running Docker containers we recommend the user to check the official [Docker run reference](https://docs.docker.com/engine/reference/run/), and also our instructions for [running a case at your local linux host with Docker](./Documentation/ContainerUsage/RunningLocalWithDocker.md).
 
 We also strongly recommend users to inspect the scripts that OpenFOAM developers have created for running their own native containers, for example: [foundation scripts](http://dl.openfoam.org/docker/) or [esi scripts: installOpenFOAM & startOpenFOAM](https://sourceforge.net/projects/openfoam/files/v1912/). (By the way, developers' scripts include the sourcing of the bashrc file within the Docker command, so that the user does not need to explicitly source it when entering to the interactive session.)
 

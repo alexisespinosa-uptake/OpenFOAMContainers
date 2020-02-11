@@ -1,94 +1,12 @@
-# II. Porting the Docker MPICH-OpenFOAM container into Singularity
-
-## 0. Installation of Singularity in your personal computer
-
-For the developing and maintenance of OpenFOAM containers, we recommend you have an installation of Singularity in your local host. (Currently, we are using v3.5.2). For installing Singularity in your own computer, you can follow the official documentation of [Sylabs](https://sylabs.io/).
-
-## 1. Porting the Docker container into Singularity
-
-General porting rules of any Docker container into Singularity are explained in the Singularity documentation: [Singularity-&-Docker documentation](https://sylabs.io/guides/3.5/user-guide/singularity_and_docker.html#). And also in the [Pawsey documentation of Singularity](https://support.pawsey.org.au/documentation/display/US/Singularity).
-
-Nevertheless, the recommended procedure for OpenFOAM containers will be explained here because we'll use some specific recommendations. In particular, in the Singularity definition file, we indicate to source the OpenFOAM environment definition file "bashrc" every time the container is executed. This is important, because this avoids the need to source the bashrc file when in an interactive session is required. But more importantly, because this allows OpenFOAM MPI applications to recognise the environmental variables correctly when ran in the so called **"hybrid mode"** (that is, when MPI tasks are spawned from the host computer and not within the container itself). Otherwise, the environmental variables would have to be defined one by one within the Dockerfile or the Singularity definition file, as was the case for older container managers. (The hybrid mode is used for executing any MPI containerised application at Pawsey, as explained in the [Pawsey documentation of Singularity](https://support.pawsey.org.au/documentation/display/US/Singularity).)
-
-The procedure for porting the OpenFOAM Docker container into Singularity is simple. First, you need to create a Singularity definition file that indicates the use of the already existing Docker container. Secondly, this definition file should also indicate the sourcing of the OpenFOAM "bashrc" file to set the environment. So, the definition file ("Singularity.openfoam.def") should contain:
-
-```Singularity
-Bootstrap: docker
-From: mickey/openfoam:7
-
-%post
-/bin/mv /bin/sh /bin/sh.original
-/bin/ln -s /bin/bash /bin/sh
-echo ". /opt/OpenFOAM/OpenFOAM-7/etc/bashrc" >> $SINGULARITY_ENVIRONMENT
-```
-The meaning of the commands can be examined in the [Sylabs](https://sylabs.io/) documentation. But, basically, the first two lines are indicating that the new Singularity container will be constructed from a Docker container and the name that the container has in the DockerHub repository. (Here we are considering that your docker repository (username in Dockerhub) is "mickey", the name is "openfoam" and the version (tag) is 7).
-
-The commands in the "%post" section are not that intuitive. But the steps are the following: first, the shell definition "/bin/sh" is backed up to "bin/sh/original"; second, a new link with the name "/bin/sh" is now pointing to "bin/bash"; and third, the line ". /opt/OpenFOAM/OpenFOAM-7/etc/bashrc" is added to the file accessed through the variable SINGULARITY_ENVIRONMENT. The third command allows to define environmental variables by sourcing a definition script (bashrc in this case). This is explained in the Singularity documentation [environment & metadata](https://sylabs.io/guides/3.5/user-guide/environment_and_metadata.html). The first two commands are used to change the /bin/sh symlink to /bin/bash instead of the default /bin/dash, as explained here: [github issue 3838](https://github.com/sylabs/singularity/issues/3838).
-
-
-Finally, the command to perform the build is:
-
-```bash
-localHost> export myRepository=/singularity/myRepository
-localHost> sudo singularity build $myRepository/openfoam-7-mickey.sif Singularity.openfoam.def
-```
-This will create the singularity image:
-```bash
-/singularity/myRepository/openfoam-7-mickey.sif
-```
-Obviously, images can be placed and named wherever the user wants. We recommend to collect them into a single directory that the user can manage as a repository.
-
-## 2. Correctness test of the Singularity image
-
-The test for the singularity image is similar to the test we performed for the Docker container. But with some small differences. The first difference is that the singularity container is now not able to write anything into the directory tree that already exists within the container. Therefore, we won't be able to copy the tutorial case to "/home/ofuser/OpenFOAM/ofuser-7". But that is not a problem, as Singularity allows to keep using the local disk and directories and there is where we are going to copy the tutorial case. At the end, this is more useful as the results will be kept intact after exiting the container.
-
-The second difference is that the default user in the interactive session of the container is not "ofuser" but the original user in the local host. Again, this is not a problem. Indeed, both differences are more a desirable advantage over the default basic behaviour of Docker.
-
-Then, to test the image with singularity, execute the following commands:
-
-```bash
-localHost> singularity shell $myRepository/OpenFOAM/openfoam-7-mickey.sif 
-
-Singularity> mkdir run
-Singularity> cd run
-Singularity> find $FOAM_TUTORIALS -type d -name "*channel*"
-/opt/OpenFOAM/OpenFOAM-7/tutorials/incompressible/pimpleFoam/LES/channel395
-Singularity> cp -r /opt/OpenFOAM/OpenFOAM-7/tutorials/incompressible/pimpleFoam/LES/channel395 .
-Singularity> ls
-channel395
-Singularity> cd channel395/
-Singularity> ls
-0  0.orig  Allrun  constant  system
-Singularity> ./Allrun
-Running blockMesh on /vol2/ubuntu/containers/OpenFOAM-Pawsey-Containers/openfoam-7/02_PortingToSingularity/localDisk/run/channel395
-Running decomposePar on /vol2/ubuntu/containers/OpenFOAM-Pawsey-Containers/openfoam-7/02_PortingToSingularity/localDisk/run/channel395
-Running pimpleFoam in parallel on /vol2/ubuntu/containers/OpenFOAM-Pawsey-Containers/openfoam-7/02_PortingToSingularity/localDisk/run/channel395 using 4 processes
-Running reconstructPar on /vol2/ubuntu/containers/OpenFOAM-Pawsey-Containers/openfoam-7/02_PortingToSingularity/localDisk/run/channel395
-Running postChannel on /vol2/ubuntu/containers/OpenFOAM-Pawsey-Containers/openfoam-7/02_PortingToSingularity/localDisk/run/channel395
-Singularity> ls
-0	120  240  360  440  560  680  80   880	Allrun	       log.decomposePar  log.reconstructPar  system
-0.orig	160  280  40   480  600  720  800  920	constant       log.pimpleFoam	 postProcessing
-1000	200  320  400  520  640  760  840  960	log.blockMesh  log.postChannel	 processors4
-Singularity> exit
-exit
-
-localHost> ls
-run
-localHost> cd run
-localHost> ls
-channel395
-localHost> cd channel395
-localHost> ls
-0       120  240  360  440  560  680  80   880  Allrun         log.decomposePar  log.reconstructPar  system
-0.orig  160  280  40   480  600  720  800  920  constant       log.pimpleFoam    postProcessing
-1000    200  320  400  520  640  760  840  960  log.blockMesh  log.postChannel   processors4
-```
-
-## (Additional). Performance test of Docker and Singularity images
+## (Additional). Performance test of Docker and Singularity MPICH images
 
 Besides the usage of the internal MPI, singularity allows the usage of the host MPI instead. This is known as the "hybrid approach" in the documentation of Sylabs: [mpi](https://sylabs.io/guides/3.3/user-guide/mpi.html). This gives a performance advantage as MPI applications are allowed to use "bare metal" communications instead of an emulaton of MPI processes within the container manager environment.
 
-In order to test performance, we can check the amount of time needed for the execution of the channel395 tutorial. First, we generate results for the internal run with an interactive session with Docker (using internal MPICH):
+Here we test the time needed for the execution of the channel395 tutorial on a personal computer.
+
+#### Docker container interactive: run in parallel with internal MPICH
+
+First, we generate results for the internal run with an interactive session with Docker (using internal MPICH):
 
 ```bash
 localHost> docker run -it --rm -u $(id -u):$(id -g) --mount=type=bind,source=$PWD,target=/localDir -w /localDir alexisespinosa/openfoam:7
@@ -121,7 +39,7 @@ exit
 localHost> tail -15 log.pimpleFoam.pawsey-7.docker.internal | grep Time
 ExecutionTime = 902.04 s  ClockTime = 964 s
 ```
-
+#### Singularity container interactive: run in parallel with internal MPICH
 Now we generate results using the Singularity image interactively (using internal MPICH)
 
 ```bash
@@ -154,6 +72,7 @@ localHost> tail -15 log.pimpleFoam.pawsey-7.singularity.internal | grep Time
 ExecutionTime = 734.68 s  ClockTime = 790 s
 ```
 
+#### Singularity container: run in parallel outside the container with local host MPICH in "hybrid mode" (non interactive)
 Now, we can use the "hybrid approach". For that, it is necessary to count with an MPICH installation in the local host. Then, the host installation of MPICH needs to be binded to the container. This is accomplished by defining the environmental variables SINGULARITY\_BINDPATH and SINGULARITY\_LD\_LIBRARY_PATH:
 
 ```bash
@@ -198,6 +117,8 @@ Finalising parallel run
 localHost> tail -15 log.pimpleFoam.pawsey-7.singularity.hybrid | grep Time
 ExecutionTime = 717.55 s  ClockTime = 772 s
 ```
+
+#### Summary
 The summary of our results so far show that performance increases when using Singularity. And increases even more when using the hybrid approach (host MPI):
 
 | Tutorial | Container | Mode | Computer | ClockTime |
@@ -208,10 +129,13 @@ The summary of our results so far show that performance increases when using Sin
 
 
 
-## (Additional) Performance test of OpenFOAM developers' containers using Docker and Singularity
+## (Additional) Performance test of OpenFOAM developers' containers using Docker and Singularity with OpenMPI
 
 For the sake of completeness, here we present the performance results when using the developers' containers. It is important to stress again that, under current configuration, developers' containers cannot be used in Pawsey Supercomputers due to their implementation with OpenMPI and not with MPICH. Nevertheless, this information may still be important for Nimbus users running OpenFOAM applications and for the OpenFOAM community in general.
 
+Here we test the time needed for the execution of the channel395 tutorial on a personal computer with foundation's OpenFOAM-7 container (openfoam/openfoam7-paraview56) and ESI OpenFOAM-v1912 container (openfoamplus/of_v1912_centos73).
+
+#### Foundation's OpenFOAM-7 Docker container interactive: run in parallel with internal OpenMPI
 For the internal MPI run (OpenMPI) with Docker of the OpenFOAM-7 foundation container:
 
 ```shell
@@ -251,7 +175,9 @@ exit
 localHost> tail -15 log.pimpleFoam.foundation-7.docker.internal | grep Time
 ExecutionTime = 924.32 s  ClockTime = 936 s
 ```
+#### Foundation's OpenFOAM-7 Singularity container interactive: run in parallel with internal OpenMPI
 
+###### Porting of the Foundation's OpenFOAM-7 original container into Singularity
 For the internal MPI run (OpenMPI) with Singularity of the OpenFOAM-7 foundation container. First create the definition file "Singularity.foundation.def":
 
 ```Singularity
@@ -268,6 +194,8 @@ Then create the Singularity image:
 ```shell
 localHost> sudo singularity build $myRepository/openfoam-7-foundation.sif Singularity.foundation.def
 ```
+
+###### Execution
 And, finally, execute the singularity container interactively:
 
 ```shell
@@ -307,9 +235,10 @@ exit
 localHost> tail -15 log.pimpleFoam.foundation-7.singularity.internal | grep Time
 ExecutionTime = 780.43 s  ClockTime = 782 s
 ```
-
+#### OpenFOAM-7 Singularity container: run in parallel outside the container with local host OpenMPI in "hybrid mode" (non interactive)
 For the hybrid MPI run (host OpenMPI) with Singularity of the OpenFOAM-7 foundation container. First define the binding paths for host OpenMPI:
 
+###### Checking the local host installation of OpenMPI
 ```shell
 localHost> mpirun --version
 mpirun (Open MPI) 1.10.4
@@ -319,7 +248,7 @@ Report bugs to http://www.open-mpi.org/community/help/
 localHost> export SINGULARITY_BINDPATH="/opt/openmpi/openmpi-1.10.4/apps"
 localHost> export SINGULARITYENV_LD_LIBRARY_PATH="/opt/openmpi/openmpi-1.10.4/apps/lib"
 ```
-
+###### Execution
 Then execute the container in hybrid mode:
 
 ```shell
@@ -346,7 +275,7 @@ a non-zero exit code.. Per user-direction, the job has been aborted.
 ```
 (Something is failing for the hybrid OpenMPI for the hybrid approach for the foundation container)
 
-
+#### ESI's OpenFOAM-v1912 Docker container interactive: run in parallel with internal OpenMPI
 For the internal MPI run (OpenMPI) with Docker of the OpenFOAM-v1912 ESI container:
 
 ```shell
@@ -374,13 +303,29 @@ exit
 localHost> tail -15 log.pimpleFoam.esi-v1912.docker.internal | grep Time
 ExecutionTime = 921.56 s  ClockTime = 933 s
 ```
+#### ESI's OpenFOAM-v1912 Singularity container interactive: run in parallel with internal OpenMPI
 
-For the internal MPI run (OpenMPI) with Singularity of the OpenFOAM-v1912 ESI container:
+###### Porting of the ESI's OpenFOAM-v1912 original container into Singularity
+For the internal MPI run (OpenMPI) with Singularity of the OpenFOAM-v1912 ESO container. First create the definition file "Singularity.esi.def":
+
+```Singularity
+Bootstrap: docker
+From: openfoamplus/of_v1912_centos73
+
+%post
+/bin/mv /bin/sh /bin/sl.original
+/bin/ln -s /bin/bash /bin/sh
+echo ". /opt/OpenFOAM/setImage_v1912.sh" >> $SINGULARITY_ENVIRONMENT
+```
+(Note that this container has an upper level script "setImage_v1912.sh" to set all the needed environment rather than just sourcing the bashrc)
+
+Then create the Singularity image:
 
 ```shell
-localHost>
+localHost> sudo singularity build $myRepository/openfoam-v1912-esi.sif Singularity.esi.def
 ```
 
+###### Execution
 ```shell
 localHost> singularity shell $myRepository/OpenFOAM/openfoam-v1912-esi.sif
 
@@ -405,7 +350,7 @@ exit
 localHost> tail -15 log.pimpleFoam.esi-v1912.singularity.internal | grep Time
 ExecutionTime = 784.59 s  ClockTime = 786 s
 ```
-
+#### OpenFOAM-v1912 Singularity container: run in parallel outside the container with local host OpenMPI in "hybrid mode" (non interactive)
 For the hybrid MPI run (host OpenMPI) with Singularity of the OpenFOAM-v1912 ESI container:
 
 ```shell
@@ -427,7 +372,7 @@ Finalising parallel run
 localHost> tail -15 log.pimpleFoam.esi-v1912.singularity.hybrid | grep Time
 ExecutionTime = 755.29 s  ClockTime = 757 s
 ```
-
+#### Summary
 The summary of our results so far show that performance increases when using Singularity. And increases even more when using the hybrid approach (host MPI):
 
 | Tutorial | Container | Mode | Computer | ClockTime |
@@ -441,7 +386,3 @@ The summary of our results so far show that performance increases when using Sin
 
 ---
 Back to the [README](../../README.md)
-
-
-
-

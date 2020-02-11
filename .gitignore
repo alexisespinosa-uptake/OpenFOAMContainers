@@ -10,3 +10,4 @@ localDisk
 .*.def
 .*.sh
 ._*
+slurm*

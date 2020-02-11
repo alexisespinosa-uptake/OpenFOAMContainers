@@ -1,16 +1,16 @@
 # II. Porting the Docker MPICH-OpenFOAM container into Singularity
 
-## 0. Local installation of Singularity
+## 0. Installation of Singularity in your personal computer
 
-Obviously, you need an installation of Singularity in your local host (currently we are using v3.5.2). For installing singularity you can follow the official documentation: [Sylabs](https://sylabs.io/)
+For the developing and maintenance of OpenFOAM containers, we recommend you have an installation of Singularity in your local host. (Currently, we are using v3.5.2). For installing Singularity in your own computer, you can follow the official documentation of [Sylabs](https://sylabs.io/).
 
-## 1. Porting the container to Singularity
+## 1. Porting the Docker container into Singularity
 
-General porting rules of any Docker container into Singularity are explained in the Singularity documentation: [Singularity-&-Docker documentation](https://sylabs.io/guides/3.5/user-guide/singularity_and_docker.html#). And also in Pawsey's documentation of [Singularity](https://support.pawsey.org.au/documentation/display/US/Singularity).
+General porting rules of any Docker container into Singularity are explained in the Singularity documentation: [Singularity-&-Docker documentation](https://sylabs.io/guides/3.5/user-guide/singularity_and_docker.html#). And also in the [Pawsey documentation of Singularity](https://support.pawsey.org.au/documentation/display/US/Singularity).
 
-Nevertheless, the recommended procedure for OpenFOAM containers will be explained here because we'll use some very specific recommendations. In particular, in the Singularity definition file we'll indicate to source the OpenFOAM environment definition file "bashrc". This is important, because this avoids the need to source the bashrc when in an interactive session. But more importantly, because this allows for OpenFOAM MPI applications to recognise the environmental variables correctly when ran in the "hybrid mode" (that is, when MPI tasks are spawned from the host computer and not within the container itself, as will be explained further down in the document). Otherwise, the environmental variables would have to be defined one by one during the creation of the container (as was indeed the case for other container managers).
+Nevertheless, the recommended procedure for OpenFOAM containers will be explained here because we'll use some specific recommendations. In particular, in the Singularity definition file, we indicate to source the OpenFOAM environment definition file "bashrc" every time the container is executed. This is important, because this avoids the need to source the bashrc file when in an interactive session is required. But more importantly, because this allows OpenFOAM MPI applications to recognise the environmental variables correctly when ran in the so called **"hybrid mode"** (that is, when MPI tasks are spawned from the host computer and not within the container itself). Otherwise, the environmental variables would have to be defined one by one within the Dockerfile or the Singularity definition file, as was the case for older container managers. (The hybrid mode is used for executing any MPI containerised application at Pawsey, as explained in the [Pawsey documentation of Singularity](https://support.pawsey.org.au/documentation/display/US/Singularity).)
 
-The procedure is simple. First, you need to create a Singularity definition file that indicates to use the already existing Docker container. Secondly, this definition file should also indicate the sourcing of the "bashrc" file. (We assume that your docker repository (username) is mickey and the version (tag) of the "openfoam" container is 7). Then, the definition file ("Singularity.openfoam.def") should contain:
+The procedure for porting the OpenFOAM Docker container into Singularity is simple. First, you need to create a Singularity definition file that indicates the use of the already existing Docker container. Secondly, this definition file should also indicate the sourcing of the OpenFOAM "bashrc" file to set the environment. So, the definition file ("Singularity.openfoam.def") should contain:
 
 ```Singularity
 Bootstrap: docker
@@ -21,7 +21,7 @@ From: mickey/openfoam:7
 /bin/ln -s /bin/bash /bin/sh
 echo ". /opt/OpenFOAM/OpenFOAM-7/etc/bashrc" >> $SINGULARITY_ENVIRONMENT
 ```
-The meaning of the commands can be further understood in the [Sylabs](https://sylabs.io/) documentation but, basically, the first two lines are indicating that the new Singularity container will use a docker container as a base and the name of the container in the DockerHub repository.
+The meaning of the commands can be examined in the [Sylabs](https://sylabs.io/) documentation. But, basically, the first two lines are indicating that the new Singularity container will be constructed from a Docker container and the name that the container has in the DockerHub repository. (Here we are considering that your docker repository (username in Dockerhub) is "mickey", the name is "openfoam" and the version (tag) is 7).
 
 The commands in the "%post" section are not that intuitive. But the steps are the following: first, the shell definition "/bin/sh" is backed up to "bin/sh/original"; second, a new link with the name "/bin/sh" is now pointing to "bin/bash"; and third, the line ". /opt/OpenFOAM/OpenFOAM-7/etc/bashrc" is added to the file accessed through the variable SINGULARITY_ENVIRONMENT. The third command allows to define environmental variables by sourcing a definition script (bashrc in this case). This is explained in the Singularity documentation [environment & metadata](https://sylabs.io/guides/3.5/user-guide/environment_and_metadata.html). The first two commands are used to change the /bin/sh symlink to /bin/bash instead of the default /bin/dash, as explained here: [github issue 3838](https://github.com/sylabs/singularity/issues/3838).
 

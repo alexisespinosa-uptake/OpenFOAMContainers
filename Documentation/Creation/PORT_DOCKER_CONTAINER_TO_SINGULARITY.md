@@ -1,4 +1,4 @@
-# II. Porting the Docker MPICH-OpenFOAM container into Singularity
+# Porting the Docker MPICH-OpenFOAM container into Singularity
 
 ## 0. Installation of Singularity in your personal computer
 
@@ -84,6 +84,21 @@ localHost> ls
 1000    200  320  400  520  640  760  840  960  log.blockMesh  log.postChannel   processors4
 ```
 For more general instructions on how to run a Singularity container, please refer to the [Sylabs documentation](https://sylabs.io/). We have also prepared additional information on how to [run a case at your local linux host with Singularity](./Documentation/ContainerUsage/RunningLocalWithSingularity.md) and how to [run a case at Pawsey Supercomputers with Singularity](./Documentation/ContainerUsage/RunningAtPawseyWithSingularity.md).
+
+## 3. Copy the Singularity container into Pawsey
+
+Once you have built your own singularity container, you need to copy it into a directory in your space in "/group" in Pawsey File System. These "repository" directories should be first created. Then, use scp to copy the container image. We recommend to use a "repository" for your user:
+
+```shell
+localHost> scp $myRepository/OpenFOAM/openfoam-7-mickey.sif mickey@hpc-data.pawsey.org.au:/group/<project>/mickey/singularity/myRepo
+```
+Or/and a repository for your project team (if the container image will be shared among the users of the project):
+
+```shell
+localHost> scp $myRepository/OpenFOAM/openfoam-7-mickey.sif mickey@hpc-data.pawsey.org.au:/group/<project>/singularity/groupRepo
+```
+
+Once the container is in Pawsey file system, any OpenFOAM tool/executable can be accessed using Singularity. Please read how to [run a case at Pawsey Supercomputers with Singularity](./Documentation/Usage/RunningAtPawseyWithSingularity.md) to learn how to use it.
 
 ---
 Back to the [README](../../README.md)

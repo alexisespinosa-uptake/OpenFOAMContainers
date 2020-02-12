@@ -24,22 +24,26 @@ Here we describe each of the steps needed for the creation/use of OpenFOAM conta
 * [III. Pull Pawsey's containers](./Documentation/Creation/PULL_PAWSEY_CONTAINERS.md) (under development)
 * [IV. Compiling your own OpenFOAM solver](./Documentation/Creation/COMPILING_YOUR_OWN_SOLVER.md) (under development, may be very out of date)
 * [V. Adding tools (like CFDEM-LIGGHTS or waves2FOAM) and produce a new container](./Documentation/Creation/ADDING_TOOLS_TO_NEW_IMAGE.md) (under development, may be very out of date)
+* [VI. Some other building hints](./Documentation/Creation/SOME_OTHER_BUILDING_HINTS.md)
 
 
 ### Running instructions
 
-* [IV. Running a case **at your local linux host** with **Docker**](./Documentation/Usage/RunningLocalWithDocker.md) (under development)
-* [V. Running a case **at your local linux host** with **Singularity**](./Documentation/Usage/RunningLocalWithSingularity.md)  (under development)
-* [VI. Running a case **at Pawsey Supercomputers** with **Singularity**](./Documentation/Usage/RunningAtPawseyWithSingularity.md)  (under development)
-* [VII. Running a case **at Pawsey Nimbus cloud service**](./Documentation/Usage/RunningAtNimbus.md) (under development)
-* [(VIII.)(Additional) Comparing performance of Docker, Singularity and Singularity-Hybrid](./Documentation/Usage/ComparingPerformance.md) (under development)
+* [VII. Running MPICH-OpenFOAM containers **at Pawsey Supercomputers** with **Singularity**](./Documentation/Usage/RunningAtPawseyWithSingularity.md)
+
+## Use of OpenFOAM containers at Pawsey's Nimbus Cloud Service (or your local linux desktop)
+OpenFOAM is much more easier to install in a linux Nimbus virtual machine (or in your local linux desktop) than it is in a supercomputer. Therefore, installing and using your own version of OpenFOAM in Nimbus is a non-complicated task. 
+
+Nevertheless, users may already count with a MPICH-OpenFOAM container that works fine on Pawsey's Supercomputers (as most of this documentation talks about). Or even may want to run the native OpenFOAM developers' Docker containers they provide.
+
+All these three options are possible at Nimbus (or in your local linux desktop). Here we provide some instructions for the last two options, and also compare the performance between running with Docker, Singularity and Singularity-HibridMode.
+
+* [VIII. Running MPICH-OpenFOAM containers **at Nimbus cloud service** (or your local linux desktop) with **Docker**](./Documentation/Usage/RunningLocalWithDocker.md) (under development)
+* [IX. Running MPICH-OpenFOAM containers **at Nimbus cloud service** (or your local linux desktop) with **Singularity**](./Documentation/Usage/RunningLocalWithSingularity.md)  (under development, may be very out of date)
+* [X. Running Foundation's or ESI's native OpenMPI-OpenFOAM containers **at Nimbus cloud service** (or your local linux desktop)](./Documentation/Usage/RunningLocalFoundationOrESI.md) (under development, may be very out of date)
+* [(XI.)(Additional) Comparing performance of Docker, Singularity and Singularity-HybridMode in a linux desktop or VM](./Documentation/Usage/ComparingPerformance.md)
 
 
-### Some other comments
-* [Some other comments](./Documentation/Creation/GeneralComments.md)
 
-
-## Use of OpenFOAM containers at Nimbus (Pawsey's cloud)
-OpenFOAM is much more easier to install in a linux Nimbus virtual machine than it is in a supercomputer. Therefore, installing your own version of OpenFOAM in Nimbus is a non-complicated task. Nevertheless, users may already count with an OpenFOAM container that works fine on Pawsey's Supercomputers (as most of this documentation talks about). Or even may want to run the native OpenFOAM developers' Docker containers as provided. All these three options are possible at Nimbus, but here we only describe the last two.
 
 

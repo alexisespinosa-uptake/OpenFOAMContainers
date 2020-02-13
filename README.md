@@ -15,13 +15,20 @@ Unfortunately, native OpenFOAM containers provided by the original developers of
 
 On the other hand, the preferred container manager for Pawsey supercomputers is Singularity and containers need to be prepared for it. We recommend the following approach for developing/using OpenFOAM containers at Pawsey's supercomputers: (i) build a Docker OpenFOAM container from scratch compiled with MPICH, (ii) port the Docker container into a Singularity container and (iii) use Singularity to run your OpenFOAM container.
 
-### Create a MPICH-OpenFOAM container
+### Creation/download of MPICH-OpenFOAM containers to be used at Pawsey
 
-Here we describe each of the steps needed for the creation/use of OpenFOAM containers at Pawsey:
+The following two steps are needed for the creation of MPICH-OpenFOAM containers to be executed at Pawsey:
 
-* [I. First, create a MPICH-OpenFOAM container with Docker](./Documentation/Creation/CREATE_MPICH_OPENFOAM_CONTAINER_DOCKER.md)
-* [II. Then, port your Docker container into Singularity and copy it into Pawsey](./Documentation/Creation/PORT_DOCKER_CONTAINER_TO_SINGULARITY.md)
-* [III. Pull Pawsey's containers](./Documentation/Creation/PULL_PAWSEY_CONTAINERS.md) (under development)
+* [I. Create a MPICH-OpenFOAM container with Docker](./Documentation/Creation/CREATE_MPICH_OPENFOAM_CONTAINER_DOCKER.md)
+* [II. Port your Docker container into Singularity and copy it into Pawsey](./Documentation/Creation/PORT_DOCKER_CONTAINER_TO_SINGULARITY.md)
+
+Or, you can pull the containers already created and mantained by Pawsey:
+
+* [III. Pull Pawsey's MPICH-OpenFOAM containers](./Documentation/Creation/PULL_PAWSEY_CONTAINERS.md)
+
+
+You can also compile your own solver or add tools:
+
 * [IV. Compiling your own OpenFOAM solver](./Documentation/Creation/COMPILING_YOUR_OWN_SOLVER.md) (under development, may be very out of date)
 * [V. Adding tools (like CFDEM-LIGGHTS or waves2FOAM) and produce a new container](./Documentation/Creation/ADDING_TOOLS_TO_NEW_IMAGE.md) (under development, may be very out of date)
 * [VI. Some other building hints](./Documentation/Creation/SOME_OTHER_BUILDING_HINTS.md)
@@ -39,8 +46,8 @@ Nevertheless, users may already count with a MPICH-OpenFOAM container that works
 All these three options are possible at Nimbus (or in your local linux desktop). Here we provide some instructions for the last two options, and also compare the performance between running with Docker, Singularity and Singularity-HibridMode.
 
 * [VIII. Running MPICH-OpenFOAM containers **at Nimbus cloud service** (or your local linux desktop) with **Docker**](./Documentation/Usage/RunningLocalWithDocker.md) (under development)
-* [IX. Running MPICH-OpenFOAM containers **at Nimbus cloud service** (or your local linux desktop) with **Singularity**](./Documentation/Usage/RunningLocalWithSingularity.md)  (under development, may be very out of date)
-* [X. Running Foundation's or ESI's native OpenMPI-OpenFOAM containers **at Nimbus cloud service** (or your local linux desktop)](./Documentation/Usage/RunningLocalFoundationOrESI.md) (under development, may be very out of date)
+* [IX. Running MPICH-OpenFOAM containers **at Nimbus cloud service** (or your local linux desktop) with **Singularity**](./Documentation/Usage/RunningLocalWithSingularity.md)  (under development)
+* [X. Running Foundation's or ESI's native OpenMPI-OpenFOAM containers **at Nimbus cloud service** (or your local linux desktop)](./Documentation/Usage/RunningLocalFoundationOrESI.md) (under development)
 * [(XI.)(Additional) Comparing performance of Docker, Singularity and Singularity-HybridMode in a linux desktop or VM](./Documentation/Usage/ComparingPerformance.md)
 
 

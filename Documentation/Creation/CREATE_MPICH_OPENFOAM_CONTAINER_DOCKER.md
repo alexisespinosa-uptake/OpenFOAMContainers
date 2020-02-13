@@ -29,15 +29,26 @@ This is not an easy process for newbies but, fortunately, there are several docu
 
 What the user needs to do is to define all the configuration/compilation steps obtained from the resources mentioned in the previous paragraph within the Dockerfile. These steps should be defined below the MPICH steps described above.
 
-**IMPORTANT: Do not install/use OpenMPI.** The new container should not use OpenMPI but the MPICH. Then, any step that involves the installation/usage of OpenMPI should be removed/modified in order to cancel the installation of OpenMPI and then use MPICH.
+### 3.1 Important installation settings
 
-**IMPORTANT: Do not install OpenFOAM in the system directories.** Instead, we recommend to use "/opt/OpenFOAM"
+* **IMPORTANT: Do not install/use OpenMPI.** The new container should not use OpenMPI but the MPICH. Then, any step that involves the installation/usage of OpenMPI should be removed/modified in order to cancel the installation of OpenMPI and then use MPICH.
 
-**IMPORTANT: We are still recommending to create the user "ofuser"** inside the container (as in early versions of native developers' containers). We use it so that its "/home/ofuser/OpenFOAM/ofuser-VERSION" directory can be used as the target of the environmental variable "WM\_PROJECT\_USER\_DIR". And, also, to avoid the usage of root as the user of basic interactive sessions.
+* **IMPORTANT: Do not install OpenFOAM in the system directories.** Instead, we recommend to use "/opt/OpenFOAM"
 
-**IMPORTANT: Define the -fileHandler collated as default**. Ad this application is intended to run in Pawsey, in order to avoid the creation of massive amounts of files in the shared file system, the collated option should be used by default. (Default options are defined within $FOAM\_ETC/controlDict)
+* **IMPORTANT: We are still recommending to create the user "ofuser"** inside the container (as in early versions of native developers' containers). We use it so that its "/home/ofuser/OpenFOAM/ofuser-VERSION" directory can be used as the target of the environmental variable "WM\_PROJECT\_USER\_DIR". And, also, to avoid the usage of root as the user of basic interactive sessions.
 
-Examples of Dockerfiles used for the creation of MPICH-OpenFOAM containers tested to run correctly in Magnus and Zeus are available at: [Pawsey OpenFOAM containers git](https://github.com/alexisespinosa-uptake/OpenFOAMContainers). Inside the Dockerfiles there is some additional explanation of the reasoning of the steps included.
+### 3.2 Best Practices
+The recommended best practices to be used at Pawsey should be defined within the file **"$FOAM\_ETC/controlDict"**. Therefore, this file should be modified to add the following best practices.
+
+###### From OpenFOAM versions 6 and greater or v1806 and greater
+
+* **IMPORTANT: Define the -fileHandler collated**. As this application is intended to run in Pawsey, in order to avoid the creation of massive amounts of files in the shared file system, the collated option should be used as default.
+
+### 3.3 Examples
+
+Examples of Dockerfiles used for the creation of MPICH-OpenFOAM containers tested to run correctly in Magnus and Zeus are available at: [Pawsey OpenFOAM containers git](https://github.com/alexisespinosa-uptake/OpenFOAMContainers). There, two main folders contain the different versions of containers: "basicInstallations" and "installationsWithAdditionalTools". And inside each version folder, the Dockerfiles will serve to build your own OpenFOAM container. Inside the Dockerfiles are some additional explanations about the reasoning of the steps included.
+
+### 3.4 Build
 
 The building command is the following (We assume that your docker repository (username) is mickey and the version (tag) of the "openfoam" container is 7). Note that container names cannot have uppercase letters:
 
@@ -49,7 +60,17 @@ Although, as the compilation takes a long time, it is recommended to build the c
 ```Docker
 localHost> nohup docker build -t mickey/openfoam:7 > log.build.01 2>&1 &
 ```
-(Of course, we have used "-t pawsey/openfoam:7" to build our own tested container which is ready to be used. If users want to use pawsey provided containers, they only need to use them directly from the repositories explained at the end of this document).
+
+(
+
+Of course, for the images that pawsey maintain we have used the following command:
+
+```Docker
+localHost> nohup docker build -t pawsey/openfoam:7 > log.build.01 2>&1 &
+```
+)
+
+If users want to use pawsey provided containers, they only need to use them directly from the repositories explained in the guide on how to [pull Pawsey's MPICH-OpenFOAM containers](../Creation/PULL_PAWSEY_CONTAINERS.md).
 
 $
 ## 4. Testing correctnes of the Docker container
@@ -104,7 +125,7 @@ We also strongly recommend users to inspect the scripts that OpenFOAM developers
 
 ## 5. Porting to Singularity
 
-First step to port to Singularity for the usage of the container at Pawsey is to push the container into DockerHub
+First step to port to Singularity for the usage of the container at Pawsey is to push the container into DockerHub. After the container is available in the DockerHub, user can port it to Singularity.
 
 ### Push to DockerHub
 To push the container into your repository just execute:
@@ -115,7 +136,7 @@ localHost> docker push mickey/openfoam:7
 
 ### Porting to singularity
 
-This is explained [here](II.PORT_DOCKER_CONTAINER_TO_SINGULARITY.md)
+The final step of porting to Singularity is explained in the guide about: [ porting your Docker container into Singularity and copying it into Pawsey](../Creation/PORT_DOCKER_CONTAINER_TO_SINGULARITY.md).
 
 
 

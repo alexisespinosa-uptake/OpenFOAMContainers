@@ -10,7 +10,13 @@ General porting rules of any Docker container into Singularity are explained in 
 
 Nevertheless, the recommended procedure for OpenFOAM containers will be explained here because we'll use some specific recommendations. In particular, in the Singularity definition file, we indicate to source the OpenFOAM environment definition file "bashrc" every time the container is executed. This is important, because this avoids the need to source the bashrc file when in an interactive session is required. But more importantly, because this allows OpenFOAM MPI applications to recognise the environmental variables correctly when ran in the so called **"hybrid mode"** (that is, when MPI tasks are spawned from the host computer and not within the container itself). Otherwise, the environmental variables would have to be defined one by one within the Dockerfile or the Singularity definition file, as was the case for older container managers. (The hybrid mode is used for executing any MPI containerised application at Pawsey, as explained in the [Pawsey documentation of Singularity](https://support.pawsey.org.au/documentation/display/US/Singularity).)
 
-The procedure for porting the OpenFOAM Docker container into Singularity is simple. First, you need to create a Singularity definition file that indicates the use of the already existing Docker container. Secondly, this definition file should also indicate the sourcing of the OpenFOAM "bashrc" file to set the environment. So, the definition file ("Singularity.openfoam.def") should contain:
+The procedure for porting the OpenFOAM Docker container into Singularity is simple. First, the container to be ported should have already been pushed in the DockerHub, as mentioned at the end of the guide about: [Create a MPICH-OpenFOAM container with Docker](../Creation/CREATE_MPICH_OPENFOAM_CONTAINER_DOCKER.md). You can basically do that with:
+
+```Docker
+localHost> docker push mickey/openfoam:7
+```
+
+Secondly, you need to create a Singularity definition file that indicates the use of the already existing Docker container. This definition file should also indicate the sourcing of the OpenFOAM "bashrc" file to set the environment. So, the definition file ("Singularity.openfoam.def") should contain:
 
 ```Singularity
 Bootstrap: docker

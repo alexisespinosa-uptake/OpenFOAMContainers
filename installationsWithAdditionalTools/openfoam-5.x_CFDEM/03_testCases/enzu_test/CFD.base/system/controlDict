@@ -33,9 +33,13 @@ writeControl    timeStep;
 //writeInterval   100;
 writeInterval   10;
 
-purgeWrite      0;
+//purgeWrite      0;
+//Pawsey Best Practice (if possible):
+purgeWrite      10;
 
-writeFormat     ascii;
+//writeFormat     ascii;
+//Pawsey Best Practice:
+writeFormat     binary;
 
 writePrecision  10;
 
@@ -45,6 +49,8 @@ timeFormat      general;
 
 timePrecision   8;
 
+//runTimeModifiable yes;
+//Pawsey Best Practice:
 runTimeModifiable no;
 
 libs ( "libfvOptionsCFDEM.so" );

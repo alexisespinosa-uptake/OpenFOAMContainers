@@ -283,7 +283,7 @@ RUN . ${OFBASHRC} ${BASHRC_OPTIONS} \
 
 #...........
 #Step 7.
-#Defining defaults of the controlDict
+#Defining Best Practices as defaults of the controlDict
 ARG OFCONTROL=${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/controlDict
 #...........
 #Modifying the default controlDict file

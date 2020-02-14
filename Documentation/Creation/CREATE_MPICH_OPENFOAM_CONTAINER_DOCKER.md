@@ -52,12 +52,12 @@ Examples of Dockerfiles used for the creation of MPICH-OpenFOAM containers teste
 
 The building command is the following (We assume that your docker repository (username) is mickey and the version (tag) of the "openfoam" container is 7). Note that container names cannot have uppercase letters:
 
-```Docker
+```Shell
 localHost> docker build -t mickey/openfoam:7 .
 ```
 Although, as the compilation takes a long time, it is recommended to build the container in the background and with the "no-hang-up" command. Also, it is very useful to save the output to a file:
 
-```Docker
+```Shell
 localHost> nohup docker build -t mickey/openfoam:7 > log.build.01 2>&1 &
 ```
 
@@ -65,7 +65,7 @@ localHost> nohup docker build -t mickey/openfoam:7 > log.build.01 2>&1 &
 
 Of course, for the images that pawsey maintain we have used the following command:
 
-```Docker
+```Shell
 localHost> nohup docker build -t pawsey/openfoam:7 > log.build.01 2>&1 &
 ```
 )
@@ -117,7 +117,7 @@ Note that for using OpenFOAM environment, we still need to source the "/opt/Open
 
 Be aware that after exiting the container, all the results are lost. This is not a problem here as we were just testing the correct execution of the pimpleFoam solver and other tools needed for the "channel395" case.
 
-Several other ways of launching an interactive session are available (specially the use of mounting of directories of the localHost in order to be able to write the results to the disk of the localHost). For understanding different options for running Docker containers we recommend the user to check the official [Docker run reference](https://docs.docker.com/engine/reference/run/), and also our instructions for [running a case at your local linux host with Docker](./Documentation/ContainerUsage/RunningLocalWithDocker.md).
+Several other ways of launching an interactive session are available (specially the use of mounting of directories of the localHost in order to be able to write the results to the disk of the localHost). For understanding different options for running Docker containers we recommend the user to check the official [Docker run reference](https://docs.docker.com/engine/reference/run/), and also our instructions for [running a case at your local linux host with Docker](../Usage/RunningLocalWithMPICH.md).
 
 We also strongly recommend users to inspect the scripts that OpenFOAM developers have created for running their own native containers, for example: [foundation scripts](http://dl.openfoam.org/docker/) or [esi scripts: installOpenFOAM & startOpenFOAM](https://sourceforge.net/projects/openfoam/files/v1912/). (By the way, developers' scripts include the sourcing of the bashrc file within the Docker command, so that the user does not need to explicitly source it when entering to the interactive session.)
 
@@ -130,7 +130,7 @@ First step to port to Singularity for the usage of the container at Pawsey is to
 ### Push to DockerHub
 To push the container into your repository just execute:
 
-```Docker
+```Shell
 localHost> docker push mickey/openfoam:7
 ```
 

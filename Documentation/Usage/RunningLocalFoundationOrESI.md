@@ -87,6 +87,7 @@ For this image, the developer has created a series of scripts containing the nec
 Nevertheless, the container can also be utilised with standard Docker commands. Here, we use the following approach for the internal MPI run (OpenMPI) with Docker of the OpenFOAM-7 foundation container:
 
 ```shell
+localHost> find processors4 -maxdepth 1 -mindepth 1 -type d -name "*" ! -name "0" ! -name "constant" -exec rm -rf \{} \;
 localHost> docker run -it --rm -u $(id -u):$(id -g) --mount=type=bind,source=$PWD,target=/localDir -w /localDir openfoam/openfoam7-paraview56:latest bash
 
 [ofuser@a7960016f4fa localDir]$ find processors4 -maxdepth 1 -mindepth 1 -type d -name "*" ! -name "0" ! -name "constant" -exec rm -rf \{} \;
@@ -319,12 +320,12 @@ The summary of our results so far show that performance increases when using Sin
 
 | Tutorial | Container | Mode | Computer | ClockTime |
 |----------|-----------|------|-----------|----------|
-| channel395 | openfoam/openfoam7-paraview56:latest | Docker-internalOpenMPI | 4 AMD Opteron 63xx Virtual Machine | 936 s|
-| channel395 | openfoam-7-foundation.sif | Singularity-internalOpenMPI | 4 AMD Opteron 63xx Virtual Machine | 782 s|
-| channel395 | openfoam-7-foundation.sif | Singularity-hybrid-HostOpenMPI | 4 AMD Opteron 63xx Virtual Machine | 770 s|
-| channel395 | openfoamplus/of\_v1912_centos73:latest | Docker-internalOpenMPI | 4 AMD Opteron 63xx Virtual Machine | 933 s|
-| channel395 | openfoam-v1912-esi.sif | Singularity-internalOpenMPI | 4 AMD Opteron 63xx Virtual Machine | 786 s|
-| channel395 | openfoam-v1912-esi.sif | Singularity-hybrid-HostOpenMPI | 4 AMD Opteron 63xx Virtual Machine | 757 s|
+| channel395 | openfoam/openfoam7-paraview56:latest | Docker-internalOpenMPI | 4 AMD Opteron 63xx Virtual Machine | 1064.8 s|
+| channel395 | openfoam-7-foundation.sif | Singularity-internalOpenMPI | 4 AMD Opteron 63xx Virtual Machine | 806.4 s|
+| channel395 | openfoam-7-foundation.sif | Singularity-hybrid-HostOpenMPI | 4 AMD Opteron 63xx Virtual Machine | 787.2 s|
+| channel395 | openfoamplus/of\_v1912_centos73:latest | Docker-internalOpenMPI | 4 AMD Opteron 63xx Virtual Machine | 959.6 s|
+| channel395 | openfoam-v1912-esi.sif | Singularity-internalOpenMPI | 4 AMD Opteron 63xx Virtual Machine | 796.6 s|
+| channel395 | openfoam-v1912-esi.sif | Singularity-hybrid-HostOpenMPI | 4 AMD Opteron 63xx Virtual Machine | 790.0 s|
 
 ---
 Back to the [README](../../README.md)

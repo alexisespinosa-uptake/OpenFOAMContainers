@@ -192,10 +192,13 @@ The summary of our results so far show that performance increases when using Sin
 
 | Tutorial | Container | Mode | Computer | ClockTime |
 |----------|-----------|------|-----------|----------|
-| channel395 | pawsey/openfoam:7 | Docker-internalMPICH | 4 AMD Opteron 63xx Virtual Machine | 964 s|
-| channel395 | openfoam-7-pawsey.sif | Singularity-internalMPICH | 4 AMD Opteron 63xx Virtual Machine | 790 s|
-| channel395 | openfoam-7-pawsey.sif | Singularity-hybrid-HostMPICH | 4 AMD Opteron 63xx Virtual Machine | 772 s|
+| channel395 | pawsey/openfoam:7 | Docker-internalMPICH | 4 AMD Opteron 63xx Virtual Machine | 975.4 s|
+| channel395 | openfoam-7-pawsey.sif | Singularity-internalMPICH | 4 AMD Opteron 63xx Virtual Machine | 783.6 s|
+| channel395 | openfoam-7-pawsey.sif | Singularity-hybrid-HostMPICH | 4 AMD Opteron 63xx Virtual Machine | 779.2 s|
+| channel395 | pawsey/openfoam:v1912 | Docker-internalMPICH | 4 AMD Opteron 63xx Virtual Machine | 960.8 s|
+| channel395 | openfoam-v1912-pawsey.sif | Singularity-internalMPICH | 4 AMD Opteron 63xx Virtual Machine | 767.5 s|
+| channel395 | openfoam-v1912-pawsey.sif | Singularity-hybrid-HostMPICH | 4 AMD Opteron 63xx Virtual Machine | 760.2 s|
 
 
 ---
-Back to the [README](../../README.md)
+Back to the [README](../../README.OpenFOAM.md)

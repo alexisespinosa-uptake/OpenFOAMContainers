@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: alexisespinosa/openfoam:5.x_CFDEM
+From: pawsey/openfoam:5.x_CFDEM
 
 %post
 /bin/mv /bin/sh /bin/sh.original

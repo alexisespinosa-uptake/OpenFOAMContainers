@@ -11,7 +11,7 @@ FROM ubuntu:18.04
 
 LABEL maintainer="Alexis.Espinosa@pawsey.org.au"
 #OpenFOAM version to install
-ARG OFVERSION="v1912"
+ARG OFVERSION="v1812"
 #Using bash from now on
 SHELL ["/bin/bash", "-c"]
 
@@ -149,7 +149,7 @@ RUN apt-get update -qq\
 #    Therefore, ThirdParty scotch is the one to be installed and used by openfoam.
 #AEG:NoScotch:   libscotch-dev \
 #AEG:No CGAL because third party will be used
-#AEG:NoCGAL:will be installed as 3rdParty:   libcgal-dev \
+#AEG:NoCGAL:   libcgal-dev \
 #AEG:These libraries are needed for CGAL (system and third party) (if needed, change libgmp-dev for libgmp3-dev):
    libgmp-dev libmpfr-dev\
 #AEG: Some more suggestions from the wiki instructions:
@@ -157,8 +157,6 @@ RUN apt-get update -qq\
    libglu1-mesa-dev \
 #AEG:I found the following was needed to install  FlexLexer.h
    libfl-dev \
-#AEG:Curl is possibly missing for paraview (From instructions for openfoam-7) (will use it next time I try to compile paraview): 
-#   curl \
  && apt-get clean all \
  && rm -r /var/lib/apt/lists/*
 
@@ -188,7 +186,7 @@ RUN head -23 ${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh >
  && echo '#------------------------------------------------------------------------------' >> ${OFPREFS} \
 #Using a combination of the variable definition recommended for the use of system mpich here:
 #https://bugs.openfoam.org/view.php?id=1167
-#And in the file .../OpenFOAM-v1912/wmake/rules/General/mplibMPICH
+#And in the file .../OpenFOAM-$OFVERSION/wmake/rules/General/mplibMPICH
 #(These MPI_* environmental variables are set in the prefs.sh as suggested in the link above,
 # and this file is sourced automatically by the bashrc when the bashrc is sourced)
 #--As suggested in the link, WM_MPLIB and MPI_ROOT need to be set:
@@ -215,12 +213,13 @@ RUN head -23 ${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh >
 
 #...........
 #Modifying the bashrc file
+RUN cp ${OFBASHRC} ${OFBASHRC}.original \
 #Changing the installation directory within the bashrc file (This is not in the openfoamwiki instructions)
-RUN sed -i '/^projectDir="$HOME.*/aprojectDir="'"${OFINSTDIR}"'/OpenFOAM-$WM_PROJECT_VERSION"' ${OFBASHRC} \
+ && sed -i '/^projectDir="$HOME.*/aprojectDir="'"${OFINSTDIR}"'/OpenFOAM-$WM_PROJECT_VERSION"' ${OFBASHRC} \
  && sed -i '0,/^projectDir="$HOME/s//# projectDir="$HOME/' ${OFBASHRC} \
 #" (This comment line is needed to let vi to show the right syntax)
-#Changing the WM_PROJECT_USER_DIR directory within the bashrc file 
-#IMPORTANT:You have two options:
+#Changing the place for your own tools/solvers (WM_PROJECT_USER_DIR directory) within the bashrc file 
+#IMPORTANT:When using this container, you have two options when building your own tools/solvers:
 #   1. You can mount a directory of your local-host into this directory (as explained at the end of the Dockerfile)
 #   2. Or you can include and build stuff inside the container and save it as your own image for later use.
  && sed -i '/^export WM_PROJECT_USER_DIR=.*/aexport WM_PROJECT_USER_DIR="'"${OFUSERDIR}/ofuser"'-$WM_PROJECT_VERSION"' ${OFBASHRC} \
@@ -236,7 +235,7 @@ RUN sed -i '/^projectDir="$HOME.*/aprojectDir="'"${OFINSTDIR}"'/OpenFOAM-$WM_PRO
 #Install paraview for catalyst module to properly compile (wont work with just VTK)
 #Install paraview for graphical postprocessing to be available in the container 
 
-##@@-@@#:#AEG: So far, I have only succeeded installing VTK
+##@@-@@#:#AEG: So far, I have only succeeded installing VTK (This instructions worked for v1912)
 ##@@-@@#:##VTK compilation (Adapted alternative instructions)
 ##@@-@@#:ARG exaFile=makeVTK.example
 ##@@-@@#:ARG conFile=makeVTK.container
@@ -250,7 +249,7 @@ RUN sed -i '/^projectDir="$HOME.*/aprojectDir="'"${OFINSTDIR}"'/OpenFOAM-$WM_PRO
 ##@@-@@#: && ln -s ParaView-v5.6.3/VTK VTK-8.2.0 \
 ##@@-@@#:#AEG: will use the conFile to run the installation
 ##@@-@@#: && cp $exaFile $conFile \
-##@@-@@#:#AEG: scritps are failing in /bin/sh
+##@@-@@#:#AEG: scritps are failing shebang /bin/sh, changing explicitly to bash:
 ##@@-@@#: && sed -i '\,^#!/bin/sh.*,i#!/bin/bash' $conFile \
 ##@@-@@#: && sed -i 's,^#!/bin/sh,###!/bin/sh,' $conFile \
 ##@@-@@#:#AEG: system mesa is 19.2.1, but setting is really for ThirdParty mesa, so it is not needed
@@ -258,7 +257,8 @@ RUN sed -i '/^projectDir="$HOME.*/aprojectDir="'"${OFINSTDIR}"'/OpenFOAM-$WM_PRO
 ##@@-@@#: && sed -i '0,/^mesa/s//# mesa/' $conFile \ 
 ##@@-@@#:#AEG: removing the mesa set up and the weird vtk line
 ##@@-@@#: && sed -i -e '/-osmesa/d' -e '/-mesa-prefix/d' -e '/$vtk/d' $conFile \
-##@@-@@#:#AEG: makeVTK is still called by $conFile, but  scritps are failing in /bin/sh
+##@@-@@#:#AEG: makeVTK is still called by $conFile, but  scritps are failing with /bin/sh, change to bash:
+##@@-@@#: && cp makeVTK makeVTK.original \
 ##@@-@@#: && sed -i '\,^#!/bin/sh.*,i#!/bin/bash' makeVTK \
 ##@@-@@#: && sed -i 's,^#!/bin/sh,###!/bin/sh,' makeVTK \
 ##@@-@@#: && ./$conFile 2>&1 | tee log.makeVTK
@@ -276,7 +276,8 @@ RUN . ${OFBASHRC} \
  && $WM_PROJECT_DIR/wmake/src/Allmake \
  && cd $WM_THIRD_PARTY_DIR \
  && export QT_SELECT=qt5 \
-#AEG: makeParaView failing in /bin/sh
+#AEG: makeParaView failing with shebang "/bin/sh", changing explicitly to bash:
+ && cp makeParaView makeParaView.original \
  && sed -i '\,^#!/bin/sh.*,i#!/bin/bash' makeParaView \
  && sed -i 's,^#!/bin/sh,###!/bin/sh,' makeParaView \
  && ./makeParaView -python -mpi -python-lib /usr/lib/x86_64-linux-gnu/libpython2.7.so.1.0 2>&1 | tee log.makePV
@@ -287,7 +288,8 @@ RUN . ${OFBASHRC} \
 #Install Third Party tools (preferred to do it as a separate step and not together with the full openfoam compilation) 
 #Updating the BOOST version to be used:
 ARG OFCGAL=${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/config.sh/CGAL
-RUN sed -i '/^boost_version=.*/aboost_version=boost_1_64_0' ${OFCGAL} \
+RUN cp ${OFCGAL} ${OFCGAL}.original \
+ && sed -i '/^boost_version=.*/aboost_version=boost_1_64_0' ${OFCGAL} \
  && sed -i '0,/^boost_version/s//# boost_version/' ${OFCGAL} \
 #" (This comment line is needed to let vi to show the right syntax)
 #--Dummy line:
@@ -332,8 +334,9 @@ RUN . ${OFBASHRC} \
 ARG OFCONTROL=${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/controlDict
 #...........
 #Modifying the default controlDict file
+RUN cp ${OFCONTROL} ${OFCONTROL}.original \
 #Setting collated as default for fileHandler
-RUN sed -i '\@fileHandler uncollated;@a    fileHandler collated;' ${OFCONTROL} \
+ && sed -i '\@fileHandler uncollated;@a    fileHandler collated;' ${OFCONTROL} \
  && sed -i '0,\@fileHandler uncollated;@s@@// fileHandler uncollated;@' ${OFCONTROL} \
 #--Dummy line:
  && echo ''

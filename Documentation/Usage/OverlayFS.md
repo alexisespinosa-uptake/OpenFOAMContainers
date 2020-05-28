@@ -1,7 +1,8 @@
-# Running OpenFOAM containers at Pawsey Supercomputers using Singularity
-Here we describe how to execute MPICH-OpenFOAM containers at Pawsey Supercomputers. Every parallel solver needs to be executed with the Supercomputer MPICH using the "hybrid mode" of Singularity.
+# Using virtual file system OverlaFS
 
-## 0. Preparation
+We recommend the use of virtual file systems to avoid the generation of a large number of result files. This my only be needed for old versions of OpenFOAM (older than OpenFOAM-6 and OpenFOAM-1712) as the "collated" option for result files was not fully functional, or not existent at all.
+
+## 1. Preparation
 
 Once in a session on Zeus or Magnus, load the singularity module:
 

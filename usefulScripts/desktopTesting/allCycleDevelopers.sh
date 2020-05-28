@@ -4,6 +4,11 @@
 SING_VERSION=3.5.2
 source ~/bin/load/singularity-v$SING_VERSION.sh
 myRepo=/vol2/singularity/myRepository/OpenFOAM
+#NOTE: For the hybrid mode singularity runs, the right MPI needst to be loaded.
+#      This is performed by sourcing loading scripts.
+#      All the MPI loading scripts create the right environment variables for singularity:
+#      SINGULARITYENV_LD_LIBRARY_PATH
+#      SINGULARITY_BINDPATH
 
 #Test mark
 testMark=1000

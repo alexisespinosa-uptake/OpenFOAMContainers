@@ -1,6 +1,6 @@
 # I. Create a MPICH-OpenFOAM container with Docker
 
-As mentioned previously, we are recommending to use Docker for building the MPICH-OpenFOAM container instead of using Singularity building tools from the very beginning. The reason for this is the "layering" approach utilized in Docker build tool. This layering keeps saved the different building steps defined in the Docker file into different layers. And when there is a need for modifying one of the steps of the Dockerfile for a new building, the previous steps are just recalled (not executed) for the rebuild (saving a lot of time). On the other hand, Singularity executes the whole definition file every time a rebuild is needed.
+As mentioned previously, we recommend to first use Docker for building the OpenFOAM container instead of using Singularity building tools. The reason for this is the practicality of the "layering" approach utilised in Docker build tool. This layering saves the different building steps defined in the Docker file into different layers. And when there is a need for modifying one intermediate step of the Dockerfile, all the previous steps are just recalled (not executed) for the rebuild, saving a lot of time. Once the building process has been checked for correctness, we then port the container into Singularity format to allow its execution at Pawsey's supercomputers.
 
 ## 0. Install Docker in your host machine
 
@@ -8,45 +8,63 @@ Building Docker containers require a proper Docker installation in your linux lo
 
 ## 1. Use of the Dockerfile for building a container
 
-There is plenty of documentation about building docker containers from a Dockerfile. Please refer to this documentation to understand the process: [Reference Docker builder](https://docs.docker.com/engine/reference/builder/).
+There is plenty of documentation about building docker containers from a Dockerfile. Please refer to this documentation to understand the process: [Reference Docker builder](https://docs.docker.com/engine/reference/builder/). Also refer to Pawsey's notes and workshops about containers.
+
+### 1.1 Example Dockerfiles and their corresponding Docker images
+
+Pawsey maintains a reduced number of OpenFOAM containers. Users can check the definition files utilised for its creation and use them as example and reference:
+
+[https://github.com/PawseySC/pawsey-containers/tree/master/OpenFOAM](https://github.com/PawseySC/pawsey-containers/tree/master/OpenFOAM)
+
+[https://hub.docker.com/r/pawsey/openfoam](https://hub.docker.com/r/pawsey/openfoam)
 
 
-## 2. Installing MPICH within the container
 
-Pawsey provides a tested base image that contains an ABI compatible version of MPICH: [mpi-base](https://hub.docker.com/r/pawsey/mpi-base). Containers built from this base can run mpi applications in Pawsey supercomputers. The container also has the OSU-benchmarks installed and has been build from ubuntu:18.04.
+## 2. Start from a base container with MPI prepared by Pawsey
 
-In order to build a container from [mpi-base](https://hub.docker.com/r/pawsey/mpi-base), the Dockerfile of the new container should contain:
+Pawsey provides tested base images that contain a version of MPI which is ABI compatible with CrayMPI and IntelMPI:
+
+[https://hub.docker.com/r/pawsey/mpich-base](https://hub.docker.com/r/pawsey/mpich-base)
+
+[https://github.com/PawseySC/pawsey-containers/tree/master/mpich-base](https://github.com/PawseySC/pawsey-containers/tree/master/mpich-base)
+
+Containers built from these base images can run MPI applications in Pawsey supercomputers. The containers also has the OSU-benchmarks installed and have been built for different versions of ubuntu.
+
+For example, in order to build the _pawsey/openfoam:7_ image, we used the base image with MPICH 3.1.4 and Ubuntu 18.04. After inspecting the corresponding Dockerfile you can read at the very beginning:
 
 ```Docker
-FROM pawsey/mpi-base:latest
+FROM pawsey/mpich-base:3.1.4_ubuntu18.04
 ```
 
-If for some reason, ubuntu 18.04 is not wanted for the creation of the new OpenFOAM container, then MPICH installation need to be explicitly defined within the new Dockerfile. For that, users should start from another version of ubuntu (or even another version of linux) but can still follow (copy/paste) the steps in the [MPICH Dockerfile](https://github.com/PawseySC/pawsey-dockerfiles/blob/master/mpi-base/Dockerfile) used for the creation of mpi-base.
+If for some reason, the existing base images does not fit to your needs (probably because of the flavour or version of the operating system of the container), then users can utilise the existing definition files as a guide to create their own base images.
 
 ## 3. Installing OpenFOAM within the container
 
-This is not an easy process for newbies but, fortunately, there are several documentation resources from where to find a guide for installing OpenFOAM. The main resources we recommend to read are: [OpenFOAM Foundation source](https://openfoam.org/download/source/), [OpenFOAM ESI source] (https://www.openfoam.com/download/install-source.php), and [OpenFOAM wiki installation guides](https://openfoamwiki.net/index.php/Category:Installing_OpenFOAM_on_Linux).
+This is not an easy process but, fortunately, there are several documentation resources from where to find a guide for installing OpenFOAM. 
 
-What the user needs to do is to define all the configuration/compilation steps obtained from the resources mentioned in the previous paragraph within the Dockerfile. These steps should be defined below the MPICH steps described above.
+Developers' resources for latest versions are: [OpenFOAM Foundation source](https://openfoam.org/download/source/), [OpenFOAM ESI source] (https://www.openfoam.com/download/install-source.php).
+
+Developers' instructions for old versions of the Foundation's flavour are still available. You can find them by navigating from the release history page: [https://openfoam.org/download/history/](https://openfoam.org/download/history/) and, from there, reach the installation instructions. For example, for OpenFOAM-2.2.0 at: [https://openfoam.org/download/2-2-0-source/](https://openfoam.org/download/2-2-0-source/). It seems that official installation instructions for old versions of the ESI flavour are not available anymore.
+
+And, instructions for current and old versions of all flavours, with fixes to the official instructions for different operating systems can be found at: [OpenFOAM wiki installation guides](https://openfoamwiki.net/index.php/Category:Installing_OpenFOAM_on_Linux).
+
+In order to install OpenFOAM within the container, the steps described in the guides (with some small changes and additions) need to be set within the Dockerfile. Users are encouraged to use the existing Dockerfiles maintained by Pawsey as templates, where installation steps have been included and changes/additions have been documented.
+
 
 ### 3.1 Important installation settings
 
-* **IMPORTANT: Do not install/use OpenMPI.** The new container should not use OpenMPI but the MPICH. Then, any step that involves the installation/usage of OpenMPI should be removed/modified in order to cancel the installation of OpenMPI and then use MPICH.
+* **IMPORTANT: Do not install/use OpenMPI.** The new container should not install MPI (like OpenMPI) again. MPICH has already been provided from the base images described above. Then, any step that force the installation/usage of OpenMPI should be avoided/removed/modified in order to cancel the automatic/forced installation of OpenMPI.
 
-* **IMPORTANT: Do not install OpenFOAM in the system directories.** Instead, we recommend to use "/opt/OpenFOAM"
+* **IMPORTANT: Do not install OpenFOAM in the system directories.** Instead, we recommend to use "/opt/OpenFOAM" as the installation directory.
 
-* **IMPORTANT: We are still recommending to create the user "ofuser"** inside the container (as in early versions of native developers' containers). We use it so that its "/home/ofuser/OpenFOAM/ofuser-VERSION" directory can be used as the target of the environmental variable "WM\_PROJECT\_USER\_DIR". And, also, to avoid the usage of root as the user of basic interactive sessions.
+* **IMPORTANT: We are still recommending to create the user "ofuser"** inside the container (as in early versions of native developers' containers). We use "ofuser" to avoid the usage of "root" for basic interactive sessions. Also, the directory "/home/ofuser/OpenFOAM/ofuser-VERSION" is recommended as the target of the environmental variable "WM\_PROJECT\_USER\_DIR".
 
 ### 3.2 Best Practices
-The recommended best practices to be used at Pawsey should be defined within the file **"$FOAM\_ETC/controlDict"**. Therefore, this file should be modified to add the following best practices.
+If possible, the recommended best practices to be used at Pawsey should be defined within the file **"$FOAM\_ETC/controlDict"**. Therefore, this file should be modified to add the following best practices.
 
-###### From OpenFOAM versions 6 and greater or v1806 and greater
+###### From Foundation's OpenFOAM-6 and ESI's OpenFOAM-v1806 or newer
 
-* **IMPORTANT: Define the -fileHandler collated**. As this application is intended to run in Pawsey, in order to avoid the creation of massive amounts of files in the shared file system, the collated option should be used as default.
-
-### 3.3 Examples
-
-Examples of Dockerfiles used for the creation of MPICH-OpenFOAM containers tested to run correctly in Magnus and Zeus are available at: [Pawsey OpenFOAM containers git](https://github.com/alexisespinosa-uptake/OpenFOAMContainers). There, two main folders contain the different versions of containers: "basicInstallations" and "installationsWithAdditionalTools". And inside each version folder, the Dockerfiles will serve to build your own OpenFOAM container. Inside the Dockerfiles are some additional explanations about the reasoning of the steps included.
+* **IMPORTANT: Define the -fileHandler collated** as default to avoid the creation of massive amounts of files in the shared file system.
 
 ### 3.4 Build
 
@@ -79,12 +97,29 @@ The final objective for OpenFOAM containers is to run in parallel using the host
 
 To test the correctness of the installation, we use an interactive session with the following commands. We assume that your docker repository (username) is "mickey" and the version (tag) of the "openfoam" container is 7. (You could also test pawsey/openfoam:7  .). The case to be tested is "channel395":
 
+###### 4.1 Run the container interactivelly
+
 ```shell
 localHost> docker run -it --rm mickey/openfoam:7
+ofuser@111c7333a814:~$ 
+```
 
-ofuser@111c7333a814:~$ source /opt/OpenFOAM/OpenFOAM-7/etc/bashrc            
+###### 4.2 Source the bashrc to set up OpenFOAM environment
+
+```shell 
+ofuser@111c7333a814:~$ source /opt/OpenFOAM/OpenFOAM-7/etc/bashrc
+ofuser@111c7333a814:~$ echo $WM_MPLIB
+SYSTEMMPI
+ofuser@111c7333a814:~$ echo $WM_PROJECT_INST_DIR
+/opt/OpenFOAM
+ofuser@111c7333a814:~$ echo $FOAM_MPI
+mpi-system          
 ofuser@111c7333a814:~$ echo $FOAM_RUN
 /home/ofuser/OpenFOAM/ofuser-7/run
+```
+
+###### 4.3 Execute a tutorial
+```shell
 ofuser@111c7333a814:~$ mkdir -p $FOAM_RUN
 ofuser@111c7333a814:~$ cd $FOAM_RUN
 ofuser@111c7333a814:~/OpenFOAM/ofuser-7/run$ find $FOAM_TUTORIALS -type d -name "*channel*"
@@ -111,21 +146,18 @@ exit
 
 localHost>
 ```
-As all the results are there, then everything seems to be running correctly.
+All the results were generated properly, so everything seems to be working fine.
 
-Note that for using OpenFOAM environment, we still need to source the "/opt/OpenFOAM/OpenFOAM-7/etc/bashrc" file.
+Note that for this Docker container, we still need to source the "/opt/OpenFOAM/OpenFOAM-7/etc/bashrc" file to set the OpenFOAM environment.
 
-Be aware that after exiting the container, all the results are lost. This is not a problem here as we were just testing the correct execution of the pimpleFoam solver and other tools needed for the "channel395" case.
+Be aware that after exiting the container, all the results will be lost. This is not a problem here because we are just testing the correct execution of a containerised solver with Docker. Furthermore, we still need to port the Docker container into Singularity for its usage at Pawsey.
 
-Several other ways of launching an interactive session are available (specially the use of mounting of directories of the localHost in order to be able to write the results to the disk of the localHost). For understanding different options for running Docker containers we recommend the user to check the official [Docker run reference](https://docs.docker.com/engine/reference/run/), and also our instructions for [running a case at your local linux host with Docker](../Usage/RunningLocalWithMPICH.md).
-
-We also strongly recommend users to inspect the scripts that OpenFOAM developers have created for running their own native containers, for example: [foundation scripts](http://dl.openfoam.org/docker/) or [esi scripts: installOpenFOAM & startOpenFOAM](https://sourceforge.net/projects/openfoam/files/v1912/). (By the way, developers' scripts include the sourcing of the bashrc file within the Docker command, so that the user does not need to explicitly source it when entering to the interactive session.)
-
+If users are interested to use the Docker container itself for their own purposes, they will need to mount a directory in localHost in order to keep the results. For understanding the different options for running Docker containers we recommend to check the official [Docker run reference](https://docs.docker.com/engine/reference/run/), and also our instructions for [running a case at your local linux host with Docker](../Usage/RunningLocalWithMPICH.md). Users can also inspect the scripts that OpenFOAM developers have created for running their own native Docker containers, for example: [foundation scripts](http://dl.openfoam.org/docker/) or [esi scripts: installOpenFOAM & startOpenFOAM](https://sourceforge.net/projects/openfoam/files/v1912/). (By the way, developers' scripts include the sourcing of the bashrc file within the Docker command, so that the user does not need to explicitly source it when entering to the interactive session.)
 
 
 ## 5. Porting to Singularity
 
-First step to port to Singularity for the usage of the container at Pawsey is to push the container into DockerHub. After the container is available in the DockerHub, user can port it to Singularity.
+The first step to port our container into Singularity is to push it into DockerHub. After the container is available in the DockerHub, user can then port it into Singularity format.
 
 ### Push to DockerHub
 To push the container into your repository just execute:
@@ -141,4 +173,4 @@ The final step of porting to Singularity is explained in the guide about: [ port
 
 
 ---
-Back to the [README](../../README.md)
+Back to the [README.OpenFOAM](../../README.OpenFOAM.md)

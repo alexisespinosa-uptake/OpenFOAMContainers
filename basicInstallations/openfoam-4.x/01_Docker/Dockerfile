@@ -193,8 +193,8 @@ RUN head -23 ${OFINSTDIR}/OpenFOAM-${OFVERSION}/etc/config.sh/example/prefs.sh >
 RUN sed -i '/^export FOAM_INST_DIR=$HOME.*/aexport FOAM_INST_DIR='"${OFINSTDIR}" ${OFBASHRC} \
  && sed -i '0,/^export FOAM_INST_DIR=$HOME/s//# export FOAM_INST_DIR=$HOME/' ${OFBASHRC} \
 #" (This comment line is needed to let vi to show the right syntax)
-#Changing the WM_PROJECT_USER_DIR directory within the bashrc file 
-#IMPORTANT: When compiling your own tools, you have two options:
+#Changing the place for your own tools/solvers (WM_PROJECT_USER_DIR directory) within the bashrc file 
+#IMPORTANT:When using this container, you have two options when building your own tools/solvers:
 #   1. You can mount a directory of your local-host into this directory
 #   2. Or you can build a new container based on this one, and then include and build stuff
 #      inside the new container for later use.

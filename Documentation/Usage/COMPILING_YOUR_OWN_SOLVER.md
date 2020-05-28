@@ -133,4 +133,3 @@ cd $WM_PROJECT_USER_DIR/solvers/my_pimpleFoam
 wclean
 wmake
 ```
-

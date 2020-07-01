@@ -118,6 +118,11 @@ RUN wget --no-check-certificate -O OpenFOAM-${OFVERSION}.tgz \
 
 #...........
 #Step 3. (Additional, not in the instructions)
+#Replacing the fvIOoptionList.C file with the one from version 2.3.x for allowing OverlayFS not to hangup
+COPY --chown=1004:1000 fvIOoptionList.C ${OFINSTDIR}/OpenFOAM-${OFVERSION}/src/fvOptions/fvOptions/fvIOoptionsList.C
+
+#...........
+#Step 4. (Additional, not in the instructions)
 #Adapting settings for the use of the case: WM_MPLIB=SYSTEMMPI
 #Rule files for SYSTEMMPI are not present by default in OpenFoam-2.2.0. Then, these files need to be created.
 #Examples of these files were taken from the ones that do exist in standard OpenFOAM-2.4.x installation

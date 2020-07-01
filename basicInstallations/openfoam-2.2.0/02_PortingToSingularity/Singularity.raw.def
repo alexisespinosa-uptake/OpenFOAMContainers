@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: pawsey/openfoam:2.2.0
+From: alexisespinosa/openfoam:2.2.0_raw
 
 %post
 /bin/mv /bin/sh /bin/sh.original

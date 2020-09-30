@@ -54,26 +54,29 @@ RUN apt-get update -qq\
 # II. Installation of waves2Foam
 #...........
 # A. First cloning the repo
-WORKDIR /opt
-RUN svn co http://svn.code.sf.net/p/openfoam-extend/svn/trunk/\Breeder_1.6/other/waves2Foam 
+#AA@ARG WAVES2INSTALLDIR=/opt
+ARG WAVES2INSTALLDIR=$OFUSERDIR/ofuser-${OFVERSION}/applications/utilities
+RUN . ${OFBASHRC} \
+ && if [ ! -d $WAVES2INSTALLDIR ]; then mkdir -p $WAVES2INSTALLDIR; fi \
+ && cd $WAVES2INSTALLDIR \
+ && svn co http://svn.code.sf.net/p/openfoam-extend/svn/trunk/\Breeder_1.6/other/waves2Foam 
 
 #...........
 # B. Second updating the bashrc environmental variables for the waves2Foam installation
-ARG WAVES2FOAMDIR=/opt/waves2Foam
-ARG WAVESBASHRC=$WAVES2FOAMDIR/bin/bashrc
-WORKDIR $WAVES2FOAMDIR
-RUN cp $WAVESBASHRC.org $WAVESBASHRC \
-# Installation files reside in the $WAVES2FOAMDIR
- && sed -i '/^export WAVES_DIR=.*/aexport WAVES_DIR='"$WAVES2FOAMDIR" ${WAVESBASHRC} \
- && sed -i '0,/^export WAVES_DIR/s//# export WAVES_DIR/' ${WAVESBASHRC} \
-# Compiled binaries will be added to the OpenFOAM $FOAM_APPBIN
- && sed -i '/^export WAVES_APPBIN=.*/aexport WAVES_APPBIN=$FOAM_APPBIN' ${WAVESBASHRC} \
- && sed -i '0,/^export WAVES_APPBIN/s//# export WAVES_APPBIN/' ${WAVESBASHRC} \
-# Compiled libraries will be added to the OpenFOAM $FOAM_LIBBIN
- && sed -i '/^export WAVES_LIBBIN=.*/aexport WAVES_LIBBIN=$FOAM_LIBBIN' ${WAVESBASHRC} \
- && sed -i '0,/^export WAVES_LIBBIN/s//# export WAVES_LIBBIN/' ${WAVESBASHRC} \
-#--Dummy line:
- && echo ''
+ARG WAVESBASHRC=$WAVES2INSTALLDIR/waves2Foam/bin/bashrc
+WORKDIR $WAVES2INSTALLDIR/waves2Foam
+#AA@RUN cp $WAVESBASHRC.org $WAVESBASHRC \
+#AA@# Installation files reside in the $WAVES2FOAMDIR
+#AA@ && sed -i '/^export WAVES_DIR=.*/aexport WAVES_DIR='"$WAVES2FOAMDIR" ${WAVESBASHRC} \
+#AA@ && sed -i '0,/^export WAVES_DIR/s//# export WAVES_DIR/' ${WAVESBASHRC} \
+#AA@# Compiled binaries will be added to the OpenFOAM $FOAM_APPBIN
+#AA@ && sed -i '/^export WAVES_APPBIN=.*/aexport WAVES_APPBIN=$FOAM_APPBIN' ${WAVESBASHRC} \
+#AA@ && sed -i '0,/^export WAVES_APPBIN/s//# export WAVES_APPBIN/' ${WAVESBASHRC} \
+#AA@# Compiled libraries will be added to the OpenFOAM $FOAM_LIBBIN
+#AA@ && sed -i '/^export WAVES_LIBBIN=.*/aexport WAVES_LIBBIN=$FOAM_LIBBIN' ${WAVESBASHRC} \
+#AA@ && sed -i '0,/^export WAVES_LIBBIN/s//# export WAVES_LIBBIN/' ${WAVESBASHRC} \
+#AA@#--Dummy line:
+#AA@ && echo ''
 
 #...........
 # C. The installation command
